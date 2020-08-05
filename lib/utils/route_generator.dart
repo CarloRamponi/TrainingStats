@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:training_stats/datatypes/action_data.dart';
-import 'package:training_stats/datatypes/evaluation_data.dart';
 import 'package:training_stats/datatypes/exercise_data.dart';
 import 'package:training_stats/datatypes/player_data.dart';
 import 'package:training_stats/datatypes/training_data.dart';
@@ -42,14 +41,6 @@ class RouteGenerator {
                   ActionData(fullName: "Palleggio", shortName: "P"),
                 ]
               ),
-              evaluations: <EvaluationData>[
-                EvaluationData(value: -3, shortName: "="),
-                EvaluationData(value: -2, shortName: "-"),
-                EvaluationData(value: -1, shortName: "/"),
-                EvaluationData(value: 1, shortName: "!"),
-                EvaluationData(value: 2, shortName: "+"),
-                EvaluationData(value: 3, shortName: "#"),
-              ],
             );
           }
         );

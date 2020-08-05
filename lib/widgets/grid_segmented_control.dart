@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 class GridSegmentedControl<T> extends StatefulWidget {
   GridSegmentedControl(
@@ -13,7 +14,7 @@ class GridSegmentedControl<T> extends StatefulWidget {
   final String title;
   final Map<T, String> widgets;
   final int rowCount;
-  final void Function(T) onPressed;
+  final bool Function(T) onPressed;
 
   @override
   _GridSegmentedControlState createState() => _GridSegmentedControlState();
@@ -23,11 +24,22 @@ class _GridSegmentedControlState<T> extends State<GridSegmentedControl<T>> {
   T selectedItem;
   T currentTappedItem;
 
+  //callback onPressed should return true if the user can select this item, false otherwise
   void onTap(T item) {
-    setState(() {
-      selectedItem = item;
-    });
-    widget.onPressed(item);
+    if(item == selectedItem) {
+      widget.onPressed(null);
+      setState(() {
+        selectedItem = null;
+      });
+    } else if(widget.onPressed(item)) {
+      setState(() {
+        selectedItem = item;
+      });
+    } else {
+      setState(() {
+        selectedItem = null;
+      });
+    }
   }
 
   void onTapDown(T item) {
@@ -115,6 +127,7 @@ class _GridSegmentedControlState<T> extends State<GridSegmentedControl<T>> {
                     ),
                   ),
                   GridView.count(
+                      physics: new NeverScrollableScrollPhysics(),
                       crossAxisSpacing: 5.0,
                       shrinkWrap: true,
                       crossAxisCount: widget.rowCount,

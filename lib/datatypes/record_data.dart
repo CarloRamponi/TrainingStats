@@ -1,6 +1,8 @@
 
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
 import 'package:training_stats/datatypes/action_data.dart';
-import 'package:training_stats/datatypes/evaluation_data.dart';
 import 'package:training_stats/datatypes/player_data.dart';
 
 class RecordData {
@@ -13,7 +15,22 @@ class RecordData {
 
   PlayerData player;
   ActionData action;
-  EvaluationData evaluation;
+  int evaluation;
   DateTime timestamp;
+
+  Color getEvalColor() {
+    switch(evaluation) {
+      case -2:
+        return Colors.red;
+      case -1:
+        return Colors.orange;
+      case 1:
+        return Colors.yellow;
+      case 2:
+        return Colors.green;
+      default:
+        return Colors.brown;
+    }
+  }
 
 }
