@@ -6,6 +6,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:training_stats/datatypes/record_data.dart';
 
+class EvaluationHistoryTile extends StatelessWidget {
+  
+  final RecordData record;
+  
+  EvaluationHistoryTile({
+    @required this.record
+  });
+  
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 35,
+      width: 35,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(100),
+          color: record.getEvalColor()
+      ),
+      child: Center(
+        child: Text(
+          record.player.shortName,
+          style: TextStyle(
+              color: Colors.white
+          ),
+        ),
+      )
+    );
+  }
+  
+}
+
 class EvaluationHistoryBoard extends StatefulWidget {
   EvaluationHistoryBoard({Key key}) : super(key: key);
 
@@ -50,12 +80,11 @@ class EvaluationHistoryBoardState extends State<EvaluationHistoryBoard> {
   }
 
   void removeLastRecord() {
-    records.removeLast();
-
     setState(() {
       animationPhase = _AnimationPhase.REMOVE;
     });
     Future.delayed(_ANIM_DURATION, () {
+      records.removeLast();
       setState(() {
         animationPhase = _AnimationPhase.NONE;
       });
@@ -68,10 +97,10 @@ class EvaluationHistoryBoardState extends State<EvaluationHistoryBoard> {
         return _SIZE/2.0;
         break;
       case _AnimationPhase.INSERT:
-        return 80.0;
+        return 60.0;
         break;
       case _AnimationPhase.REMOVE:
-        return 80.0;
+        return 60.0;
         break;
     }
   }
@@ -87,16 +116,12 @@ class EvaluationHistoryBoardState extends State<EvaluationHistoryBoard> {
           AnimatedPositioned(
             key: ObjectKey(records.last),
             top: lastWidgetTopPosition(),
+            right: (MediaQuery.of(context).size.width / 2.0) - (_SIZE / 2.0),
             duration: _ANIM_DURATION,
-            curve: Curves.easeInBack,
-            child: Container(
-              height: 35,
-              width: 35,
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(100),
-                  color: records.last.getEvalColor()
-              ),
-            ),
+            curve: Curves.easeOutBack,
+            child: EvaluationHistoryTile(
+              record: records.last,
+            )
           )
       );
 
@@ -106,17 +131,12 @@ class EvaluationHistoryBoardState extends State<EvaluationHistoryBoard> {
             AnimatedPositioned(
               key: ObjectKey(records[i]),
               top: _SIZE/2.0,
-              right: (MediaQuery.of(context).size.width / 2.0) - (_SIZE / 2.0) + ((_PADDING + _SIZE) * (records.length - 2 - i)),
+              right: (MediaQuery.of(context).size.width / 2.0) - (_SIZE / 2.0) + ((_PADDING + _SIZE) * (records.length - 1 - i - (animationPhase == _AnimationPhase.REMOVE ? 1 : 0))),
               duration: _ANIM_DURATION,
-              curve: Curves.easeInBack,
-              child: Container(
-                height: 35,
-                width: 35,
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),
-                    color: records.last.getEvalColor()
-                ),
-              ),
+              curve: Curves.easeOutBack,
+              child: EvaluationHistoryTile(
+                record: records[i]
+              )
             )
         );
       }

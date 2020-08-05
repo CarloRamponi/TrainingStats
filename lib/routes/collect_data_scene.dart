@@ -54,18 +54,20 @@ class _CollectDataSceneState extends State<CollectDataScene> {
 
   bool onEvaluationChanged(int eval) {
 
-    /* DEBUG */
-    if(eval == 2) {
-      evalHistoryKey.currentState.addRecord(RecordData(
-        player: widget.training.players[0],
-        action: widget.training.actions[0],
-        evaluation: 2
-      ));
-    } else if(eval == -2) {
-      evalHistoryKey.currentState.removeLastRecord();
-    }
-
     if(currentRecord.player != null && currentRecord.action != null) {
+
+      setState(() {
+
+        records.add(RecordData(
+            player: currentRecord.player,
+            action: currentRecord.action,
+            evaluation: eval
+        ));
+
+        evalHistoryKey.currentState.addRecord(records.last);
+
+      });
+
       return true;
     } else {
       scaffoldKey.currentState.removeCurrentSnackBar();
@@ -74,8 +76,15 @@ class _CollectDataSceneState extends State<CollectDataScene> {
     }
   }
 
-  bool okBtnEnabled() {
-    return currentRecord.player != null && currentRecord.action != null && currentRecord.evaluation != null;
+  bool undoBtnEnabled() {
+    return records.length > 0;
+  }
+
+  void undo() {
+    setState(() {
+      records.removeLast();
+      evalHistoryKey.currentState.removeLastRecord();
+    });
   }
 
   @override
@@ -123,6 +132,18 @@ class _CollectDataSceneState extends State<CollectDataScene> {
             alignment: Alignment.bottomCenter,
             child: EvaluationHistoryBoard(
               key: evalHistoryKey,
+            ),
+          ),
+          Positioned(
+            bottom: 5.0,
+            right: 8.0,
+            child: IconButton(
+              icon: Icon(
+                Icons.backspace,
+                color: Colors.grey,
+                size: 25.0,
+              ),
+              onPressed: undoBtnEnabled() ? () { undo(); } : null,
             ),
           )
         ],
