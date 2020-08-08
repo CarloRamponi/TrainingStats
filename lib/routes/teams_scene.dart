@@ -13,35 +13,49 @@ class TeamsScene extends StatefulWidget {
 enum TeamAction { edit, delete }
 
 class _TeamsSceneState extends State<TeamsScene> {
-
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   Future<List<Team>> teams;
 
   @override
   void initState() {
-    teams = TeamProvider.getAll()..then((value) {
-      value.forEach((element) {print(element.teamName); });
-    });
+    teams = TeamProvider.getAll();
     super.initState();
   }
 
-  void _handleDropDownMenu(int teamIndex, TeamAction action) async {
-    switch(action) {
+  void _handleDropDownMenu(Team team, TeamAction action) async {
+    switch (action) {
       case TeamAction.edit:
-
         scaffoldKey.currentState.removeCurrentSnackBar();
-        scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Not yet implemented"), duration: Duration(milliseconds: 700),));
+        scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text("Not yet implemented"),
+          duration: Duration(milliseconds: 700),
+        ));
 
         break;
       case TeamAction.delete:
         var result = await showDialog(
-            context: context,
-            builder: (_) => _confirmDeleteDialog()
-        );
+            context: context, builder: (_) => _confirmDeleteDialog());
 
-        if(result == true) {
-          scaffoldKey.currentState.removeCurrentSnackBar();
-          scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Not yet implemented"), duration: Duration(milliseconds: 700),));
+        if (result == true) {
+          TeamProvider.delete(team.id).then((num) {
+            if (num == 1) {
+              scaffoldKey.currentState.removeCurrentSnackBar();
+              scaffoldKey.currentState.showSnackBar(SnackBar(
+                content: Text("Team deleted correctly."),
+                duration: Duration(milliseconds: 700),
+              ));
+            } else {
+              scaffoldKey.currentState.removeCurrentSnackBar();
+              scaffoldKey.currentState.showSnackBar(SnackBar(
+                content: Text("Error while deleting team."),
+                duration: Duration(milliseconds: 700),
+              ));
+            }
+          });
+
+          setState(() {
+            teams = TeamProvider.getAll();
+          });
         }
 
         break;
@@ -69,6 +83,47 @@ class _TeamsSceneState extends State<TeamsScene> {
     );
   }
 
+  AlertDialog _createTeamDialog() {
+    TextEditingController _textFieldController = TextEditingController();
+
+    return AlertDialog(
+      title: Text("Create Team"),
+      content: TextField(
+        autofocus: true,
+        maxLength: 128,
+        controller: _textFieldController,
+        decoration: InputDecoration(labelText: 'Team name'),
+      ),
+      actions: <Widget>[
+        FlatButton(
+          child: Text("Cancel"),
+          onPressed: () {
+            Navigator.pop(context, null);
+          },
+        ),
+        FlatButton(
+          child: Text("Create"),
+          onPressed: () {
+            Navigator.pop(context, _textFieldController.text);
+          },
+        )
+      ],
+    );
+  }
+
+  void _createTeam() async {
+    var result =
+        await showDialog(context: context, builder: (_) => _createTeamDialog());
+
+    if (result != null) {
+      TeamProvider.create(teamName: result);
+      //TODO open edit team page
+      setState(() {
+        teams = TeamProvider.getAll();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,71 +134,129 @@ class _TeamsSceneState extends State<TeamsScene> {
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
           onPressed: () {
-            scaffoldKey.currentState.removeCurrentSnackBar();
-            scaffoldKey.currentState.showSnackBar(SnackBar(
-              content: Text("Not yet implemented"),
-              duration: Duration(milliseconds: 700),));
+            _createTeam();
           },
         ),
         body: SafeArea(
-          child: ListView.separated(
-              itemBuilder: (context, index) {
-
-                GlobalKey<PopupMenuButtonState> menuKey = GlobalKey<PopupMenuButtonState>();
-
-                return ListTile(
-                  title: Text("Team $index"),
-                  subtitle: Text(
-                      'some player1, some player2, some player3, some player4, some player 5',
-                      overflow: TextOverflow.ellipsis),
-                  trailing: PopupMenuButton<TeamAction>(
-                    key: menuKey,
-                    onSelected: (selectedDropDownItem) => _handleDropDownMenu(index, selectedDropDownItem),
-                    itemBuilder: (_) {
-                      return <PopupMenuEntry<TeamAction>>[
-                        PopupMenuItem<TeamAction>(
-                          value: TeamAction.edit,
-                          child: Row(
-                            children: <Widget>[
-                              Icon(Icons.edit),
-                              Padding(
-                                padding: EdgeInsets.only(left: 10.0),
-                                child: Text("Edit"),
-                              )
-                            ],
-                          ),
+            child: FutureBuilder(
+          builder: (context, teamSnap) {
+            if (teamSnap.hasData) {
+              if (teamSnap.data.length > 0) {
+                return ListView.separated(
+                    itemBuilder: (context, index) {
+                      GlobalKey<PopupMenuButtonState> menuKey =
+                          GlobalKey<PopupMenuButtonState>();
+                      Team current = teamSnap.data[index];
+                      return ListTile(
+                        title: Text(current.teamName),
+                        subtitle: FutureBuilder(
+                          builder: (context, playersSnap) {
+                            if (playersSnap.hasData) {
+                              if (playersSnap.data.length > 0) {
+                                return Text(playersSnap.data.map((p) => p.name).toList().join(", "),
+                                    overflow: TextOverflow.ellipsis);
+                              } else {
+                                return Text('No players added yet',
+                                    overflow: TextOverflow.ellipsis);
+                              }
+                            } else {
+                              return Container(
+                                height: 10.0,
+                                width: double.infinity,
+                                margin: EdgeInsets.only(
+                                    right: MediaQuery.of(context).size.width / 4.0),
+                                decoration: BoxDecoration(
+                                    color: Colors.grey.withOpacity(0.4)),
+                                child: null,
+                              );
+                            }
+                          },
+                          future: TeamProvider.getPlayers(current.id),
                         ),
-                        PopupMenuItem<TeamAction>(
-                          value: TeamAction.delete,
-                          child: Row(
-                            children: <Widget>[
-                              Icon(Icons.delete),
-                              Padding(
-                                padding: EdgeInsets.only(left: 10.0),
-                                child: Text("Delete"),
+                        trailing: PopupMenuButton<TeamAction>(
+                          key: menuKey,
+                          onSelected: (selectedDropDownItem) =>
+                              _handleDropDownMenu(
+                                  current, selectedDropDownItem),
+                          itemBuilder: (_) {
+                            return <PopupMenuEntry<TeamAction>>[
+                              PopupMenuItem<TeamAction>(
+                                value: TeamAction.edit,
+                                child: Row(
+                                  children: <Widget>[
+                                    Icon(Icons.edit),
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 10.0),
+                                      child: Text("Edit"),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem<TeamAction>(
+                                value: TeamAction.delete,
+                                child: Row(
+                                  children: <Widget>[
+                                    Icon(Icons.delete),
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 10.0),
+                                      child: Text("Delete"),
+                                    )
+                                  ],
+                                ),
                               )
-                            ],
-                          ),
-                        )
-                      ];
+                            ];
+                          },
+                        ),
+                        onTap: () {
+                          Navigator.of(context).pushNamed('/editTeam', arguments: current);
+                        },
+                        onLongPress: () {
+                          menuKey.currentState.showButtonMenu();
+                        },
+                      );
                     },
-                  ),
-                  onTap: () {
-
-                  },
-                  onLongPress: () {
-                    menuKey.currentState.showButtonMenu();
-                  },
+                    separatorBuilder: (_, __) => Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10.0),
+                          child: Divider(),
+                        ),
+                    itemCount: teamSnap.data.length);
+              } else {
+                return Center(
+                  child: Text("Start by creating a team!"),
                 );
-              },
-              separatorBuilder: (_, __) =>
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10.0),
-                    child: Divider(),
-                  ),
-              itemCount: 10
-          ),
-        )
-    );
+              }
+            } else {
+              return ListView.separated(
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                        title: Container(
+                          height: 10.0,
+                          margin: EdgeInsets.only(
+                              right: MediaQuery.of(context).size.width / 2.0),
+                          decoration: BoxDecoration(
+                              color: Colors.grey.withOpacity(0.6)),
+                          child: null,
+                        ),
+                        subtitle: Container(
+                            height: 10.0,
+                            width: double.infinity,
+                            margin: EdgeInsets.only(
+                                right: MediaQuery.of(context).size.width / 4.0),
+                            decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.4)),
+                            child: null,
+                          ),
+                      trailing: PopupMenuButton(itemBuilder: (_) => List(),),
+                    );
+                  },
+                  separatorBuilder: (_, __) => Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.0),
+                        child: Divider(),
+                      ),
+                  itemCount: 3);
+            }
+          },
+          future: teams,
+        )));
   }
 }

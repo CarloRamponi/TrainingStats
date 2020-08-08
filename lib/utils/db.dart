@@ -11,18 +11,17 @@ class DB {
   static final _ASSET_FILE = "schema.db";
   static final _DB_FILE = "training_stats.db";
 
-  Future<Database> db;
+  Database db;
 
-  static DB get instance {
+  static Future<DB> get instance async {
     if(_instance == null) {
       _instance = DB._();
+      await _instance._init();
     }
     return _instance;
   }
 
-  DB._() {
-    db = _init();
-  }
+  DB._();
 
   Future<Database> _init() async {
     var databasesPath = await getDatabasesPath();
@@ -51,7 +50,7 @@ class DB {
       print("Opening existing database");
     }
     // open the database
-    return openDatabase(path);
+    db = await openDatabase(path);
   }
 
 }
