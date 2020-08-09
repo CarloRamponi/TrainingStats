@@ -24,14 +24,11 @@ class _TeamsSceneState extends State<TeamsScene> {
 
   void _handleDropDownMenu(Team team, TeamAction action) async {
     switch (action) {
-      case TeamAction.edit:
-        scaffoldKey.currentState.removeCurrentSnackBar();
-        scaffoldKey.currentState.showSnackBar(SnackBar(
-          content: Text("Not yet implemented"),
-          duration: Duration(milliseconds: 700),
-        ));
 
+      case TeamAction.edit:
+        Navigator.of(context).pushNamed('/editTeam', arguments: team);
         break;
+
       case TeamAction.delete:
         var result = await showDialog(
             context: context, builder: (_) => _confirmDeleteDialog());
@@ -116,11 +113,11 @@ class _TeamsSceneState extends State<TeamsScene> {
         await showDialog(context: context, builder: (_) => _createTeamDialog());
 
     if (result != null) {
-      TeamProvider.create(teamName: result);
-      //TODO open edit team page
+      Team t = await TeamProvider.create(teamName: result);
       setState(() {
         teams = TeamProvider.getAll();
       });
+      Navigator.of(context).pushNamed('/editTeam', arguments: t);
     }
   }
 
@@ -208,7 +205,11 @@ class _TeamsSceneState extends State<TeamsScene> {
                           },
                         ),
                         onTap: () {
-                          Navigator.of(context).pushNamed('/editTeam', arguments: current);
+                          scaffoldKey.currentState.removeCurrentSnackBar();
+                          scaffoldKey.currentState.showSnackBar(SnackBar(
+                            content: Text("Not yet implemented"),
+                            duration: Duration(milliseconds: 700),
+                          ));
                         },
                         onLongPress: () {
                           menuKey.currentState.showButtonMenu();

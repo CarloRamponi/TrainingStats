@@ -6,6 +6,7 @@ import 'package:training_stats/datatypes/player_data.dart';
 import 'package:training_stats/datatypes/training_data.dart';
 import 'package:training_stats/routes/collect_data_scene.dart';
 import 'package:training_stats/routes/edit_team_scene.dart';
+import 'package:training_stats/routes/select_player_scene.dart';
 import 'package:training_stats/routes/teams_scene.dart';
 import 'package:training_stats/utils/palette.dart';
 
@@ -57,6 +58,12 @@ class RouteGenerator {
           builder: (_) {
             return EditTeamScene(team: args);
           }
+        );
+      case "/editTeam/addPlayer":
+        return MaterialPageRoute(
+            builder: (_) {
+              return SelectPlayerScene(team: args);
+            }
         );
       default:
         return _errorRoute();

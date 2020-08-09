@@ -1,39 +1,38 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/team.dart';
 import 'package:training_stats/utils/db.dart';
 
-class EditTeamScene extends StatefulWidget {
-  EditTeamScene({Key key, this.team}) : super(key: key);
+class SelectPlayerScene extends StatefulWidget {
+  SelectPlayerScene({Key key, this.team}) : super(key: key);
 
   final Team team;
 
   @override
-  _EditTeamSceneState createState() => _EditTeamSceneState();
+  _SelectPlayerSceneState createState() => _SelectPlayerSceneState();
 }
 
-class _EditTeamSceneState extends State<EditTeamScene> {
+class _SelectPlayerSceneState extends State<SelectPlayerScene> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   Future<List<Player>> players;
+  TextEditingController _textFieldController = TextEditingController();
+
+  void _onTextChanged() {
+    players = TeamProvider.getPlayersNotInTeam(widget.team.id,
+        query: _textFieldController.text)
+      ..then((value) {
+        setState(() {});
+      });
+  }
 
   @override
   void initState() {
-    players = TeamProvider.getPlayers(widget.team.id);
+    players = TeamProvider.getPlayersNotInTeam(widget.team.id);
+    _textFieldController.addListener(_onTextChanged);
 
     super.initState();
-  }
-
-  void _addPlayer() async {
-    var result = await Navigator.of(context).pushNamed("/editTeam/addPlayer", arguments: widget.team);
-    if(result == true) {
-      players = TeamProvider.getPlayers(widget.team.id)..then((value) {
-        setState(() {});
-      });
-    }
   }
 
   @override
@@ -41,12 +40,23 @@ class _EditTeamSceneState extends State<EditTeamScene> {
     return Scaffold(
         key: scaffoldKey,
         appBar: AppBar(
-          title: Text(widget.team.teamName),
+          title: TextField(
+            autofocus: true,
+            style: Theme.of(context)
+                .textTheme
+                .bodyText2
+                .copyWith(fontSize: 20.0, color: Colors.white),
+            controller: _textFieldController,
+          ),
         ),
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
           onPressed: () {
-            _addPlayer();
+            scaffoldKey.currentState.removeCurrentSnackBar();
+            scaffoldKey.currentState.showSnackBar(SnackBar(
+              content: Text("Not yet implemented."),
+              duration: Duration(milliseconds: 700),
+            ));
           },
         ),
         body: SafeArea(
@@ -58,17 +68,11 @@ class _EditTeamSceneState extends State<EditTeamScene> {
                     itemBuilder: (context, index) {
                       return PlayerListTile(
                         player: playerSnap.data[index],
-                        onTap: () {
-                          scaffoldKey.currentState.removeCurrentSnackBar();
-                          scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Not yet implemented."), duration: Duration(milliseconds: 700),));
+                        onTap: () async {
+                          await TeamProvider.insertPlayer(teamId: widget.team.id, playerId: playerSnap.data[index].id);
+                          Navigator.pop(context, true);
                         },
-                        onDelete: () {
-                          TeamProvider.removePlayer(teamId: widget.team.id, playerId: playerSnap.data[index].id).then((value) {
-                            players = TeamProvider.getPlayers(widget.team.id)..then((value) {
-                              setState(() {});
-                            });
-                          });
-                        },
+                        onDelete: null,
                       );
                     },
                     separatorBuilder: (_, __) => Padding(
@@ -78,7 +82,7 @@ class _EditTeamSceneState extends State<EditTeamScene> {
                     itemCount: playerSnap.data.length);
               } else {
                 return Center(
-                  child: Text("Start by adding a player!"),
+                  child: Text("Start by creating a player!"),
                 );
               }
             } else {
