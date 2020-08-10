@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:training_stats/datatypes/team.dart';
 import 'package:training_stats/utils/db.dart';
+import 'package:training_stats/widgets/drawer.dart';
 
 class TeamsScene extends StatefulWidget {
   TeamsScene({Key key}) : super(key: key);
@@ -22,11 +23,18 @@ class _TeamsSceneState extends State<TeamsScene> {
     super.initState();
   }
 
+  void _refresh() {
+    setState(() {
+      teams = TeamProvider.getAll();
+    });
+  }
+
   void _handleDropDownMenu(Team team, TeamAction action) async {
     switch (action) {
 
       case TeamAction.edit:
-        Navigator.of(context).pushNamed('/editTeam', arguments: team);
+        await Navigator.of(context).pushNamed('/editTeam', arguments: team);
+        _refresh();
         break;
 
       case TeamAction.delete:
@@ -50,9 +58,7 @@ class _TeamsSceneState extends State<TeamsScene> {
             }
           });
 
-          setState(() {
-            teams = TeamProvider.getAll();
-          });
+          _refresh();
         }
 
         break;
@@ -114,10 +120,9 @@ class _TeamsSceneState extends State<TeamsScene> {
 
     if (result != null) {
       Team t = await TeamProvider.create(teamName: result);
-      setState(() {
-        teams = TeamProvider.getAll();
-      });
-      Navigator.of(context).pushNamed('/editTeam', arguments: t);
+      _refresh();
+      await Navigator.of(context).pushNamed('/editTeam', arguments: t);
+      _refresh();
     }
   }
 
@@ -125,6 +130,7 @@ class _TeamsSceneState extends State<TeamsScene> {
   Widget build(BuildContext context) {
     return Scaffold(
         key: scaffoldKey,
+        drawer: MyDrawer(),
         appBar: AppBar(
           title: Text("Your teams"),
         ),
@@ -204,12 +210,9 @@ class _TeamsSceneState extends State<TeamsScene> {
                             ];
                           },
                         ),
-                        onTap: () {
-                          scaffoldKey.currentState.removeCurrentSnackBar();
-                          scaffoldKey.currentState.showSnackBar(SnackBar(
-                            content: Text("Not yet implemented"),
-                            duration: Duration(milliseconds: 700),
-                          ));
+                        onTap: () async {
+                          await Navigator.of(context).pushNamed('/scout');
+                          _refresh();
                         },
                         onLongPress: () {
                           menuKey.currentState.showButtonMenu();

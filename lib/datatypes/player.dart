@@ -4,20 +4,25 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:training_stats/utils/db.dart';
 
+import 'Role.dart';
+
 class Player {
   int id;
   String name;
   String shortName;
   String photo;
+  Role role;
 
-  Player({this.id, this.name, this.shortName, this.photo});
+  Player({this.id, this.name, this.shortName, this.photo, this.role});
 
   static Player fromMap(Map<String, dynamic> m) {
     return Player(
         id: m['id'],
         name: m['name'],
         shortName: m['short_name'],
-        photo: m['photo']);
+        photo: m['photo'],
+        role: m['role'] == null ? null : Role(id: m['role'])
+    );
   }
 
   Map<String, dynamic> toMap() {
@@ -26,6 +31,10 @@ class Player {
       'short_name': this.shortName,
       'photo': this.photo
     };
+
+    if(role != null) {
+      ret['role'] = role.id;
+    }
 
     if (id != null) {
       ret['id'] = this.id;
@@ -42,10 +51,16 @@ class PlayerProvider {
   }
 
   static Future<List<Player>> getAll() async {
-    List<Map<String, dynamic>> teams = await (await DB.instance)
-        .db
-        .query('Player', columns: ['id', 'name', 'short_name', 'photo']);
-    return teams.map((m) => Player.fromMap(m)).toList();
+    List<Map<String, dynamic>> maps = await (await DB.instance).db.query('Player');
+    List<Player> players =  maps.map((m) => Player.fromMap(m)).toList();
+
+    for(int i = 0; i < players.length; i++) {
+      if(players[i].role != null) {
+        players[i].role = await RoleProvider.get(players[i].role.id);
+      }
+    }
+
+    return players;
   }
 
   static Future<int> delete(int id) async {
@@ -56,7 +71,7 @@ class PlayerProvider {
 
   static Future<int> update(Player player) async {
     return await (await DB.instance).db.update(
-        'Player', player.toMap().remove('id'),
+        'Player', player.toMap()..remove('id'),
         where: 'id = ?', whereArgs: [player.id]);
   }
 }

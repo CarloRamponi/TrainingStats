@@ -2,6 +2,8 @@
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/utils/db.dart';
 
+import 'Role.dart';
+
 class Team {
 
   int id;
@@ -58,17 +60,29 @@ class TeamProvider {
   }
 
   static Future<List<Player>> getPlayers(int teamId) async {
-//    return await Future.delayed(Duration(seconds: 5), () async {
-//        List<Map<String, dynamic>> players =  await (await DB.instance).db.query('Player', where: 'id IN (SELECT player FROM PlayerTeam WHERE team = ?)', whereArgs: [teamId]);
-//        return players.map((e) => Player.fromMap(e)).toList();
-//    });
-    List<Map<String, dynamic>> players =  await (await DB.instance).db.query('Player', where: 'id IN (SELECT player FROM PlayerTeam WHERE team = ?)', whereArgs: [teamId]);
-    return players.map((e) => Player.fromMap(e)).toList();
+    List<Map<String, dynamic>> maps =  await (await DB.instance).db.query('Player', where: 'id IN (SELECT player FROM PlayerTeam WHERE team = ?)', whereArgs: [teamId]);
+    List<Player> players =  maps.map((e) => Player.fromMap(e)).toList();
+
+    for(int i = 0; i < players.length; i++) {
+      if(players[i].role != null) {
+        players[i].role = await RoleProvider.get(players[i].role.id);
+      }
+    }
+
+    return players;
   }
 
   static Future<List<Player>> getPlayersNotInTeam(int teamId, {String query = ""}) async {
-    List<Map<String, dynamic>> players =  await (await DB.instance).db.query('Player', where: 'id NOT IN (SELECT player FROM PlayerTeam WHERE team = ?) AND name LIKE ?', whereArgs: [teamId, "%"+query+"%"]);
-    return players.map((e) => Player.fromMap(e)).toList();
+    List<Map<String, dynamic>> maps =  await (await DB.instance).db.query('Player', where: 'id NOT IN (SELECT player FROM PlayerTeam WHERE team = ?) AND name LIKE ?', whereArgs: [teamId, "%"+query+"%"]);
+    List<Player> players =  maps.map((e) => Player.fromMap(e)).toList();
+
+    for(int i = 0; i < players.length; i++) {
+      if(players[i].role != null) {
+        players[i].role = await RoleProvider.get(players[i].role.id);
+      }
+    }
+
+    return players;
   }
 
 }
