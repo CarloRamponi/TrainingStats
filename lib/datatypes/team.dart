@@ -2,7 +2,7 @@
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/utils/db.dart';
 
-import 'Role.dart';
+import 'role.dart';
 
 class Team {
 

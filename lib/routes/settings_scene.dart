@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:training_stats/datatypes/Evaluation.dart';
-import 'package:training_stats/datatypes/Role.dart';
+import 'package:training_stats/datatypes/evaluation.dart';
+import 'package:training_stats/datatypes/role.dart';
 import 'package:training_stats/widgets/drawer.dart';
 
 class SettingsScene extends StatefulWidget {

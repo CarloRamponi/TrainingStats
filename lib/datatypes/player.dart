@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:training_stats/utils/db.dart';
 
-import 'Role.dart';
+import 'role.dart';
 
 class Player {
   int id;
