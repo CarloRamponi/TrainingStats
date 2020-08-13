@@ -29,14 +29,16 @@ class MyDrawer extends StatelessWidget {
             leading: Icon(Icons.people),
             title: Text("Teams"),
             onTap: () {
-
+              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacementNamed("/teams");
             },
           ),
           ListTile(
             leading: Icon(Icons.person),
             title: Text("Players"),
             onTap: () {
-
+              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacementNamed("/players");
             },
           ),
           ListTile(

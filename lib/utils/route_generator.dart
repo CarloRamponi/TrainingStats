@@ -7,6 +7,7 @@ import 'package:training_stats/datatypes/training_data.dart';
 import 'package:training_stats/routes/about_scene.dart';
 import 'package:training_stats/routes/collect_data_scene.dart';
 import 'package:training_stats/routes/edit_team_scene.dart';
+import 'package:training_stats/routes/players_scene.dart';
 import 'package:training_stats/routes/select_player_scene.dart';
 import 'package:training_stats/routes/settings_scene.dart';
 import 'package:training_stats/routes/teams_scene.dart';
@@ -20,26 +21,56 @@ class RouteGenerator {
     final args = settings.arguments;
 
     switch (settings.name) {
+
       case "/":
+
         return MaterialPageRoute(
           builder: (_) {
             return TeamsScene();
           });
+
         break;
+
+      case "/teams":
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return TeamsScene();
+            });
+
+        break;
+
+      case "/players":
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return PlayersScene();
+            });
+
+        break;
+
       case "/editTeam" :
+
         return MaterialPageRoute(
           builder: (_) {
             return EditTeamScene(team: args);
           }
         );
+
+        break;
+
       case "/editTeam/addPlayer":
+
         return MaterialPageRoute(
             builder: (_) {
               return SelectPlayerScene(team: args);
             }
         );
+
         break;
+
       case '/scout':
+
           return MaterialPageRoute(
           builder: (_) {
             return CollectDataScene(
@@ -69,6 +100,7 @@ class RouteGenerator {
             );
           }
         );
+
         break;
 
       case "/settings":
