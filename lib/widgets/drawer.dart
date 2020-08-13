@@ -22,10 +22,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
+import 'package:package_info/package_info.dart';
 
 class MyDrawer extends StatelessWidget {
 
   final Future<String> licenseFuture = rootBundle.loadString(join("assets", "LICENSE.md"));
+  final Future<PackageInfo> infoFuture = PackageInfo.fromPlatform();
 
   @override
   Widget build(BuildContext context) {
@@ -79,23 +81,27 @@ class MyDrawer extends StatelessWidget {
             onTap: () {
 
               licenseFuture.then((license) {
+                infoFuture.then((info) {
 
-                String preamble = '''
+                  String preamble = '''
 Copyright (C) 2020 Carlo Ramponi, magocarlos1999@gmail.com
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions, see the full license below.
                 ''';
 
-                /* Remove useless spaces and returns. */
-                license = license.split("\n").map((e) => e.trim()).map((e) => e == "" ? '\n\n' : e + " ").join("");
+                  /* Remove useless spaces and returns. */
+                  license = license.split("\n").map((e) => e.trim()).map((e) => e == "" ? '\n\n' : e + " ").join("");
 
-                /* Displays a scene where there will be the license of "Training stats" and all other open source licenses of sources that are used in the application */
-                showLicensePage(
-                  context: context,
-                  applicationName: "Training Stats",
-                  applicationVersion: "1.0",
-                  applicationLegalese: preamble + "\n" + license,
-                );
+                  /* Displays a scene where there will be the license of "Training stats" and all other open source licenses of sources that are used in the application */
+                  showLicensePage(
+                    context: context,
+                    applicationName: info.appName,
+                    applicationVersion: info.version,
+                    applicationLegalese: preamble + "\n" + license,
+                    applicationIcon: Image.asset("assets/img/icon.png")
+                  );
+
+                });
               });
             },
           ),
