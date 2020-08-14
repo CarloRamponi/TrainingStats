@@ -107,8 +107,8 @@ class _PlayersSceneState extends State<PlayersScene> {
     );
   }
 
-  void _createPlayer() {
-    Navigator.of(context).pushNamed('/createPlayer');
+  void _createPlayer() async {
+    await Navigator.of(context).pushNamed('/createPlayer');
     _refresh();
   }
 
@@ -151,7 +151,7 @@ class _PlayersSceneState extends State<PlayersScene> {
                           ),
                         ),
                         title: Text(current.name),
-                        subtitle: Text(current.shortName + current.role.name == null ? "" : " - " + current.role.name),
+                        subtitle: Text(current.shortName + (current.role == null ? "" : " - " + current.role.name)),
                         trailing: PopupMenuButton<PlayerAction>(
                           key: menuKey,
                           onSelected: (selectedDropDownItem) =>

@@ -70,7 +70,7 @@ class PlayerProvider {
   }
 
   static Future<List<Player>> getAll() async {
-    List<Map<String, dynamic>> maps = await (await DB.instance).db.query('Player');
+    List<Map<String, dynamic>> maps = await (await DB.instance).db.query('Player', orderBy: "role");
     List<Player> players =  maps.map((m) => Player.fromMap(m)).toList();
 
     for(int i = 0; i < players.length; i++) {
@@ -120,7 +120,7 @@ class PlayerListTile extends StatelessWidget {
               ),
             ),
       title: Text(player.name),
-      subtitle: Text(player.shortName),
+      subtitle: Text(player.shortName + (player.role == null ? "" : " - " + player.role.name)),
       trailing: onDelete == null ? null : IconButton(
         icon: Icon(
           Icons.delete,
@@ -157,7 +157,7 @@ class PlayerListTilePlaceholder extends StatelessWidget {
         subtitle: Container(
           height: 10.0,
           margin:
-              EdgeInsets.only(right: MediaQuery.of(context).size.width / 2.0),
+              EdgeInsets.only(right: MediaQuery.of(context).size.width / 2.5),
           decoration: BoxDecoration(color: Colors.grey.withOpacity(0.4)),
           child: null,
         ));

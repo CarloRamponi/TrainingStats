@@ -70,12 +70,12 @@ class _SelectPlayerSceneState extends State<SelectPlayerScene> {
         ),
         floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add),
-          onPressed: () {
-            scaffoldKey.currentState.removeCurrentSnackBar();
-            scaffoldKey.currentState.showSnackBar(SnackBar(
-              content: Text("Not yet implemented."),
-              duration: Duration(milliseconds: 700),
-            ));
+          onPressed: () async {
+            final p = await Navigator.of(context).pushNamed("/createPlayer");
+            if(p != null) {
+              await TeamProvider.insertPlayer(teamId: widget.team.id, playerId: (p as Player).id);
+              Navigator.pop(context, true);
+            }
           },
         ),
         body: SafeArea(
