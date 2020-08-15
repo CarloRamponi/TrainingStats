@@ -48,6 +48,12 @@ class Team {
     return ret;
   }
 
+  @override
+  bool operator ==(Object other) => identical(this, other) || other is Team && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id;
+
 }
 
 class TeamProvider {

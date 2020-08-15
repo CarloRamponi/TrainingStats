@@ -46,7 +46,9 @@ import 'package:training_stats/datatypes/role.dart';
 import 'package:path/path.dart';
 
 class CreatePlayerScene extends StatefulWidget {
-  CreatePlayerScene({Key key}) : super(key: key);
+  CreatePlayerScene({Key key, this.player}) : super(key: key);
+
+  final Player player;
 
   @override
   _CreatePlayerSceneState createState() => _CreatePlayerSceneState();
@@ -57,7 +59,8 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   Future<List<Role>> roles;
-  Player player = Player();
+  Player player;
+  bool edit;
 
   FocusNode shortNameFocusNode = FocusNode();
 
@@ -67,6 +70,10 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
 
   @override
   void initState() {
+
+    edit = widget.player != null;
+    player = widget.player == null ? Player() : widget.player;
+
     roles = RoleProvider.getAll();
     super.initState();
   }
@@ -77,6 +84,15 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
     });
 
     player = await PlayerProvider.create(player);
+    Navigator.of(this.context).pop(player);
+  }
+
+  void editPlayer() async {
+    setState(() {
+      creating = true;
+    });
+
+    await PlayerProvider.update(player);
     Navigator.of(this.context).pop(player);
   }
 
@@ -189,7 +205,7 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
     return Scaffold(
         key: scaffoldKey,
         appBar: AppBar(
-          title: Text('Create player'),
+          title: Text(edit ? 'Edit player' : 'Create player'),
         ),
         body: SingleChildScrollView(
             child: Padding(
@@ -254,7 +270,8 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
                 ),
                 TextFormField(
                   maxLength: 128,
-                  autofocus: true,
+                  autofocus: !edit, //autofocus only if it is in creation mode
+                  initialValue: player.name,
                   decoration: InputDecoration(
                     counterText: "",
                     hintText: "Name",
@@ -276,6 +293,7 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
                 TextFormField(
                   maxLength: 2,
                   focusNode: shortNameFocusNode,
+                  initialValue: player.shortName,
                   decoration: InputDecoration(
                       counterText: "", hintText: 'Abbreviation'),
                   validator: (value) {
@@ -300,10 +318,6 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
                           value: player.role,
                           icon: Icon(Icons.arrow_downward),
                           iconSize: 24,
-//                            underline: Container(
-//                              height: 2,
-//                              color: Colors.deepPurpleAccent,
-//                            ),
                           onChanged: (Role newValue) {
                             setState(() {
                               player.role = newValue;
@@ -344,10 +358,13 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
                 Padding(
                   padding: EdgeInsets.only(top: 25.0),
                   child: creating ? CircularProgressIndicator() : RaisedButton(
-                    child: Text("Create"),
+                    child: Text(edit ? "Edit" : "Create"),
                     onPressed: () {
                       if (formKey.currentState.validate()) {
-                        createPlayer();
+                        if(edit)
+                          editPlayer();
+                        else
+                          createPlayer();
                       }
                     },
                   ),

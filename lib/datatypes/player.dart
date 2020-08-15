@@ -61,6 +61,12 @@ class Player {
 
     return ret;
   }
+
+  @override
+  bool operator ==(Object other) => identical(this, other) || other is Player && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id;
 }
 
 class PlayerProvider {
@@ -69,8 +75,8 @@ class PlayerProvider {
     return player;
   }
 
-  static Future<List<Player>> getAll() async {
-    List<Map<String, dynamic>> maps = await (await DB.instance).db.query('Player', orderBy: "role");
+  static Future<List<Player>> getAll({query = ""}) async {
+    List<Map<String, dynamic>> maps = await (await DB.instance).db.query('Player', orderBy: "role", where: "name LIKE ?", whereArgs: ["%"+query+"%"]);
     List<Player> players =  maps.map((m) => Player.fromMap(m)).toList();
 
     for(int i = 0; i < players.length; i++) {
@@ -113,11 +119,13 @@ class PlayerListTile extends StatelessWidget {
             )
           : CircleAvatar(
               backgroundColor: Colors.transparent,
-              child: Icon(
-                Icons.account_circle,
-                color: Colors.grey,
-                size: 50.0,
-              ),
+              child: Center(
+                child: Icon(
+                  Icons.account_circle,
+                  color: Colors.grey,
+                  size: 40.0,
+                ),
+              )
             ),
       title: Text(player.name),
       subtitle: Text(player.shortName + (player.role == null ? "" : " - " + player.role.name)),
@@ -140,11 +148,13 @@ class PlayerListTilePlaceholder extends StatelessWidget {
     return ListTile(
         leading: CircleAvatar(
           backgroundColor: Colors.transparent,
-          child: Icon(
-            Icons.account_circle,
-            color: Colors.grey,
-            size: 50.0,
-          ),
+          child: Center(
+            child: Icon(
+              Icons.account_circle,
+              color: Colors.grey,
+              size: 40.0,
+            ),
+          )
         ),
         title: Container(
           height: 10.0,

@@ -77,6 +77,15 @@ class RouteGenerator {
 
         break;
 
+      case "/editPlayer":
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return CreatePlayerScene(player: args,);
+            });
+
+        break;
+
       case "/editTeam" :
 
         return MaterialPageRoute(

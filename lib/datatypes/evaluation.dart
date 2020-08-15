@@ -58,6 +58,12 @@ class Evaluation {
         return Colors.brown;
     }
   }
+
+  @override
+  bool operator ==(Object other) => identical(this, other) || other is Evaluation && runtimeType == other.runtimeType && value == other.value;
+
+  @override
+  int get hashCode => value;
 }
 
 class EvaluationProvider {

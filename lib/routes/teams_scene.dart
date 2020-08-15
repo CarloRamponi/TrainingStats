@@ -230,8 +230,7 @@ class _TeamsSceneState extends State<TeamsScene> {
                           },
                         ),
                         onTap: () async {
-                          await Navigator.of(context).pushNamed('/scout');
-                          _refresh();
+                          _handleDropDownMenu(current, TeamAction.edit);
                         },
                         onLongPress: () {
                           menuKey.currentState.showButtonMenu();
