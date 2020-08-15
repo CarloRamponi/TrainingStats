@@ -69,7 +69,7 @@ class Evaluation {
 class EvaluationProvider {
 
   static Future<List<Evaluation>> getAll() async {
-    List<Map<String, dynamic>> teams = await (await DB.instance).db.query('Evaluation', orderBy: 'value');
+    List<Map<String, dynamic>> teams = await (await DB.instance).db.query('Evaluation', orderBy: 'value DESC',);
     return teams.map((m) => Evaluation.fromMap(m)).toList();
   }
 

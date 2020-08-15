@@ -19,17 +19,23 @@
  
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:package_info/package_info.dart';
 import 'package:training_stats/datatypes/action_data.dart';
 import 'package:training_stats/datatypes/exercise_data.dart';
 import 'package:training_stats/datatypes/player_data.dart';
 import 'package:training_stats/datatypes/training_data.dart';
 import 'package:training_stats/routes/collect_data_scene.dart';
-import 'package:training_stats/routes/create_player_scene.dart';
-import 'package:training_stats/routes/edit_team_scene.dart';
-import 'package:training_stats/routes/players_scene.dart';
-import 'package:training_stats/routes/select_player_scene.dart';
-import 'package:training_stats/routes/settings_scene.dart';
-import 'package:training_stats/routes/teams_scene.dart';
+import 'package:training_stats/routes/players_scenes/create_player_scene.dart';
+import 'package:training_stats/routes/settings_pages/about_scene.dart';
+import 'package:training_stats/routes/settings_pages/actions_scene.dart';
+import 'package:training_stats/routes/settings_pages/evaluations_scene.dart';
+import 'package:training_stats/routes/settings_pages/roles_scene.dart';
+import 'package:training_stats/routes/teams_scenes/edit_team_scene.dart';
+import 'package:training_stats/routes/players_scenes/players_scene.dart';
+import 'package:training_stats/routes/teams_scenes/select_player_scene.dart';
+import 'package:training_stats/routes/settings_pages/settings_scene.dart';
+import 'package:training_stats/routes/teams_scenes/teams_scene.dart';
 import 'package:training_stats/utils/palette.dart';
 import 'package:training_stats/widgets/drawer.dart';
 
@@ -145,6 +151,46 @@ class RouteGenerator {
         return MaterialPageRoute(
             builder: (_) {
               return SettingsScene();
+            }
+        );
+
+        break;
+
+      case "/settings/about":
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return AboutScene();
+            }
+        );
+
+        break;
+
+      case "/settings/roles":
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return RolesScene();
+            }
+        );
+
+        break;
+
+      case "/settings/evaluations":
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return EvaluationsScene();
+            }
+        );
+
+        break;
+
+      case "/settings/actions":
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return ActionsScene();
             }
         );
 

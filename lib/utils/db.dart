@@ -25,6 +25,8 @@ class DB {
   static DB _instance;
   static final _DB_FILE = "training_stats.db";
 
+  static final _CURRENT_VERSION = 1;
+
   Database db;
 
   static Future<DB> get instance async {
@@ -41,7 +43,7 @@ class DB {
     var databasesPath = await getDatabasesPath();
     var path = join(databasesPath, _DB_FILE);
     // open the database
-    db = await openDatabase(path, version: 1, onCreate: (db, version) async {
+    db = await openDatabase(path, version: _CURRENT_VERSION, onCreate: (db, version) async {
 
       await db.execute('''
         CREATE TABLE `Role` (
@@ -112,8 +114,29 @@ class DB {
             ON UPDATE CASCADE)
       ''');
 
+      await db.execute('''
+        CREATE TABLE `Action` (
+          `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+          `name` VARCHAR(128) NOT NULL,
+          `short_name` CHAR(2) NOT NULL,
+          `color` INTEGER NULL)
+      ''');
+
+      await db.execute('''
+        INSERT INTO `Action` (name, short_name, color) VALUES
+          ('Serve', 'SR', ${0xff9c27b0}),
+          ('Reception', 'R', ${0xffffc107}),
+          ('Block', 'B', ${0xff009688}),
+          ('Attack', 'A', ${0xff2196f3}),
+          ('Set', 'ST', ${0xff4caf50})
+      ''');
+
     }, onUpgrade: (db, oldversion, newversion) async {
       print("Database upgraded, old version: $oldversion, new version: $newversion");
+      switch(oldversion) {
+        default:
+          print("WARNING DB version not supported: $oldversion");
+      }
     });
   }
 

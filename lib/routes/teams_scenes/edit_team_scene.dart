@@ -63,7 +63,7 @@ class _EditTeamSceneState extends State<EditTeamScene> {
           title: Text(widget.team.teamName),
         ),
         floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add),
+          child: Icon(Icons.group_add),
           onPressed: () {
             _addPlayer();
           },
