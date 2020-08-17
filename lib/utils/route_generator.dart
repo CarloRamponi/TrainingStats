@@ -30,6 +30,7 @@ import 'package:training_stats/routes/players_scenes/create_player_scene.dart';
 import 'package:training_stats/routes/settings_pages/about_scene.dart';
 import 'package:training_stats/routes/settings_pages/actions_scene.dart';
 import 'package:training_stats/routes/settings_pages/evaluations_scene.dart';
+import 'package:training_stats/routes/settings_pages/import_export_scene.dart';
 import 'package:training_stats/routes/settings_pages/roles_scene.dart';
 import 'package:training_stats/routes/teams_scenes/edit_team_scene.dart';
 import 'package:training_stats/routes/players_scenes/players_scene.dart';
@@ -191,6 +192,16 @@ class RouteGenerator {
         return MaterialPageRoute(
             builder: (_) {
               return ActionsScene();
+            }
+        );
+
+        break;
+
+      case "/settings/import_export":
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return ImportExportScene();
             }
         );
 

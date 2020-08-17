@@ -174,7 +174,8 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
     if(croppedFile != null) {
 
       Directory docDir = await getApplicationDocumentsDirectory();
-      String path = join(docDir.path, "image" + DateTime.now().toIso8601String() + filePath.split(".").last);
+      Directory imgDir = Directory(join(docDir.path, "pictures"))..createSync();
+      String path = join(imgDir.path, DateTime.now().toIso8601String() + "." + filePath.split(".").last);
       File file = await File(croppedFile.path).rename(path);
 
       if (player.photo != null && player.photo != file.path) {

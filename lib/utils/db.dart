@@ -17,6 +17,9 @@
  */
  
  
+import 'dart:io';
+
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -138,6 +141,46 @@ class DB {
           print("WARNING DB version not supported: $oldversion");
       }
     });
+  }
+
+  /// this function will import an external file as the database overwriting the existing one.
+  Future<bool> importData(String path) async {
+
+    await db.close();
+
+    var databasesPath = await getDatabasesPath();
+    var tmpPath = join(databasesPath, _DB_FILE + "_tmp");
+    var dbPath = join(databasesPath, _DB_FILE);
+
+    await File(path).rename(tmpPath);
+
+    try {
+
+        //delete all photos references in the DB as the photos are not being exported nor imported
+        await openDatabase(tmpPath, onOpen: (db) async {
+          await db.execute('''
+          UPDATE Player SET photo = NULL
+        ''');
+        });
+
+        (await getApplicationDocumentsDirectory()).deleteSync(recursive: true);
+
+        File(dbPath).deleteSync();
+        File(tmpPath).renameSync(dbPath);
+
+        _instance = null; //this will destroy this instance and create a new one on the next DB.instance call
+
+        return true;
+
+    } catch (e) {
+
+      print("Error importing database $path: ${e.toString()}");
+
+      _instance = null; //this will destroy this instance and create a new one on the next DB.instance call
+
+      return false;
+    }
+
   }
 
 }

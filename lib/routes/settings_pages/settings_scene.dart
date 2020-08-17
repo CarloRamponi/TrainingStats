@@ -54,6 +54,12 @@ class SettingsScene extends StatelessWidget {
         route: "actions"
     ),
     SettingsPageInfo(
+        title: "Import/Export",
+        subtitle: "Import/Export your data.",
+        icon: Icons.import_export,
+        route: "import_export"
+    ),
+    SettingsPageInfo(
         title: "About",
         subtitle: "About TrainingStats.",
         icon: Icons.info,

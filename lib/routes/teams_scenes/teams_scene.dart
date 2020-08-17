@@ -106,15 +106,25 @@ class _TeamsSceneState extends State<TeamsScene> {
   }
 
   AlertDialog _createTeamDialog() {
+
     TextEditingController _textFieldController = TextEditingController();
+    GlobalKey<FormState> formKey = GlobalKey();
 
     return AlertDialog(
       title: Text("Create Team"),
-      content: TextField(
-        autofocus: true,
-        maxLength: 128,
-        controller: _textFieldController,
-        decoration: InputDecoration(labelText: 'Team name'),
+      content: Form(
+        key: formKey,
+        child: TextFormField(
+          autofocus: true,
+          maxLength: 128,
+          controller: _textFieldController,
+          validator: (value) => value == "" ? "Please insert some text" : null,
+          decoration: InputDecoration(labelText: 'Team name'),
+          onEditingComplete: () {
+            if(formKey.currentState.validate())
+              Navigator.pop(context, _textFieldController.text);
+          },
+        ),
       ),
       actions: <Widget>[
         FlatButton(
@@ -126,7 +136,8 @@ class _TeamsSceneState extends State<TeamsScene> {
         FlatButton(
           child: Text("Create"),
           onPressed: () {
-            Navigator.pop(context, _textFieldController.text);
+            if(formKey.currentState.validate())
+              Navigator.pop(context, _textFieldController.text);
           },
         )
       ],
