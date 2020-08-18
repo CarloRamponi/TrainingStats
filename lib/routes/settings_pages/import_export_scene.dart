@@ -39,10 +39,12 @@ class _ImportExportSceneState extends State<ImportExportScene> {
 
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
   bool importing;
+  bool exporting;
 
   @override
   void initState() {
     importing = false;
+    exporting = false;
     super.initState();
   }
 
@@ -81,7 +83,9 @@ class _ImportExportSceneState extends State<ImportExportScene> {
               Row(
                 children: <Widget>[
                   Expanded(
-                    child: RaisedButton(
+                    child: exporting ? Center(
+                      child: CircularProgressIndicator(),
+                    ) : RaisedButton(
                       color: Colors.green,
                       child: Row(
                         children: <Widget>[
@@ -92,7 +96,7 @@ class _ImportExportSceneState extends State<ImportExportScene> {
                           )
                         ],
                       ),
-                      onPressed: _export,
+                      onPressed: importing ? (){} : _export, //do nothing if an import is in progress
                     ),
                   ),
                   Padding(padding: EdgeInsets.symmetric(horizontal: 10.0),),
@@ -110,7 +114,7 @@ class _ImportExportSceneState extends State<ImportExportScene> {
                           )
                         ],
                       ),
-                      onPressed: _import,
+                      onPressed: exporting ? () {} : _import, //do nothing if an export is in progress
                     ),
                   ),
                 ],
@@ -124,20 +128,29 @@ class _ImportExportSceneState extends State<ImportExportScene> {
 
   void _export() async {
 
-    String date = DateFormat("y-M-d_H:m:s").format(DateTime.now());
-    print(date);
+    setState(() {
+      exporting = true;
+    });
 
-    String path = join((await getTemporaryDirectory()).path, "raining_stats_data_$date.tsdb");
-    File(join(await getDatabasesPath(), "training_stats.db")).copy(path);
+    try {
 
+      String path = await (await DB.instance).exportDB();
 
+      FlutterShare.shareFile(
+          title: path.split("/").last,
+          text: "TrainingStats exported data",
+          filePath: path,
+          chooserTitle: "Export data"
+      );
 
-    FlutterShare.shareFile(
-      title: "training_stats_data_$date.tsdb",
-      text: "TrainingStats exported data",
-      filePath: path,
-      chooserTitle: "Export data"
-    );
+    } catch (e) {
+      _scaffoldKey.currentState.removeCurrentSnackBar();
+      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Failed to generate export file"), duration: Duration(seconds: 3)));
+    }
+
+    setState(() {
+      exporting = false;
+    });
   }
 
   void _import() async {
@@ -148,18 +161,28 @@ class _ImportExportSceneState extends State<ImportExportScene> {
 
     File file = await FilePicker.getFile();
 
-    var result = await (await DB.instance).importData(file.path);
+    if(file != null) {
+      var result = await (await DB.instance).importData(file.path);
 
-    setState(() {
-      importing = false;
-    });
+      setState(() {
+        importing = false;
+      });
 
-    if(result) {
-      _scaffoldKey.currentState.removeCurrentSnackBar();
-      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Data imported correctly"), duration: Duration(seconds: 1)));
+      if (result) {
+        _scaffoldKey.currentState.removeCurrentSnackBar();
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text("Data imported correctly"),
+            duration: Duration(seconds: 1)));
+      } else {
+        _scaffoldKey.currentState.removeCurrentSnackBar();
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text("Error while importing data"),
+            duration: Duration(seconds: 3)));
+      }
     } else {
-      _scaffoldKey.currentState.removeCurrentSnackBar();
-      _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Error while importing data"), duration: Duration(seconds: 3)));
+      setState(() {
+        importing = false;
+      });
     }
 
   }

@@ -17,11 +17,13 @@
  */
  
  
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:intl/intl.dart';
 
 class DB {
 
@@ -42,45 +44,26 @@ class DB {
 
   DB._();
 
-  Future<Database> _init() async {
-    var databasesPath = await getDatabasesPath();
-    var path = join(databasesPath, _DB_FILE);
-    // open the database
-    db = await openDatabase(path, version: _CURRENT_VERSION, onCreate: (db, version) async {
+  Future<void> _onConfigure(Database db) async {
+    await db.execute('PRAGMA foreign_keys = ON');
+  }
 
-      await db.execute('''
+  Future<void> _createDbStructure(Database db, int version) async {
+
+    await db.execute('''
         CREATE TABLE `Role` (
           `id` INTEGER PRIMARY KEY AUTOINCREMENT,
           `name` VARCHAR(128) NOT NULL,
           `color` INTEGER NULL)
       ''');
 
-      await db.execute('''
-        INSERT INTO `Role` (name, color) VALUES
-        ('Setter', ${0xff4caf50}),
-        ('Libero', ${0xffffc107}),
-        ('Middle hitter', ${0xff2196f3}),
-        ('Outside hitter', ${0xff9c27b0}),
-        ('Opposite hitter', ${0xff009688})
-      ''');
-
-      await db.execute('''
+    await db.execute('''
         CREATE TABLE `Evaluation` (
           `value` INTEGER PRIMARY KEY,
           `name` CHAR(2) NULL)
       ''');
 
-      await db.execute('''
-        INSERT INTO `Evaluation` (value, name) VALUES
-        (3, '#'),
-        (2, '+'),
-        (1, '!'),
-        (-1, '/'),
-        (-2, '-'),
-        (-3, '=')
-      ''');
-
-      await db.execute('''
+    await db.execute('''
         CREATE TABLE `Player` (
           `id` INTEGER PRIMARY KEY AUTOINCREMENT,
           `name` VARCHAR(128) NULL,
@@ -94,13 +77,13 @@ class DB {
             ON UPDATE CASCADE)
       ''');
 
-      await db.execute('''
+    await db.execute('''
         CREATE TABLE `Team` (
           `id` INTEGER PRIMARY KEY AUTOINCREMENT,
           `name` VARCHAR(128) NOT NULL)
       ''');
 
-      await db.execute('''
+    await db.execute('''
         CREATE TABLE `PlayerTeam` (
           `player` INTEGER NOT NULL,
           `team` INTEGER NOT NULL,
@@ -117,7 +100,7 @@ class DB {
             ON UPDATE CASCADE)
       ''');
 
-      await db.execute('''
+    await db.execute('''
         CREATE TABLE `Action` (
           `id` INTEGER PRIMARY KEY AUTOINCREMENT,
           `name` VARCHAR(128) NOT NULL,
@@ -125,7 +108,30 @@ class DB {
           `color` INTEGER NULL)
       ''');
 
-      await db.execute('''
+  }
+
+  Future<void> _insertDefaults(Database db, int version) async {
+
+    await db.execute('''
+        INSERT INTO `Evaluation` (value, name) VALUES
+        (3, '#'),
+        (2, '+'),
+        (1, '!'),
+        (-1, '/'),
+        (-2, '-'),
+        (-3, '=')
+      ''');
+
+    await db.execute('''
+        INSERT INTO `Role` (name, color) VALUES
+        ('Setter', ${0xff4caf50}),
+        ('Libero', ${0xffffc107}),
+        ('Middle hitter', ${0xff2196f3}),
+        ('Outside hitter', ${0xff9c27b0}),
+        ('Opposite hitter', ${0xff009688})
+      ''');
+
+    await db.execute('''
         INSERT INTO `Action` (name, short_name, color) VALUES
           ('Serve', 'SR', ${0xff9c27b0}),
           ('Reception', 'R', ${0xffffc107}),
@@ -134,13 +140,49 @@ class DB {
           ('Set', 'ST', ${0xff4caf50})
       ''');
 
+  }
+
+  Future<Database> _init() async {
+    var databasesPath = await getDatabasesPath();
+    var path = join(databasesPath, _DB_FILE);
+    // open the database
+    db = await openDatabase(path, version: _CURRENT_VERSION, onConfigure: _onConfigure, onCreate: (db, version) async {
+
+      await _createDbStructure(db, version);
+      await _insertDefaults(db, version);
+
     }, onUpgrade: (db, oldversion, newversion) async {
+
       print("Database upgraded, old version: $oldversion, new version: $newversion");
       switch(oldversion) {
+
         default:
           print("WARNING DB version not supported: $oldversion");
+
       }
     });
+  }
+
+  Future<String> exportDB() async {
+
+    String date = DateFormat("y-M-d_H:m:s").format(DateTime.now());
+    String path = join((await getTemporaryDirectory()).path, "training_stats_data_$date.json");
+
+    Map<String, dynamic> export = {
+      "Role" : await db.query('Role'),
+      "Evaluation" : await db.query('Evaluation'),
+      "Player" : (await db.query('Player')).map((e) => Map.from(e)..remove("photo")).toList(),
+      "Team" : await db.query('Team'),
+      "PlayerTeam" : await db.query('PlayerTeam'),
+      "Action" : await db.query('Action')
+    };
+
+    String exportJson = jsonEncode(export);
+
+    File(path).writeAsStringSync(exportJson);
+
+    return path;
+
   }
 
   /// this function will import an external file as the database overwriting the existing one.
@@ -149,34 +191,59 @@ class DB {
     await db.close();
 
     var databasesPath = await getDatabasesPath();
-    var tmpPath = join(databasesPath, _DB_FILE + "_tmp");
     var dbPath = join(databasesPath, _DB_FILE);
 
-    await File(path).rename(tmpPath);
+    await deleteDatabase(dbPath);
+    db = await openDatabase(dbPath, version: _CURRENT_VERSION, onConfigure: _onConfigure);
+    await _createDbStructure(db, _CURRENT_VERSION);
 
     try {
 
-        //delete all photos references in the DB as the photos are not being exported nor imported
-        await openDatabase(tmpPath, onOpen: (db) async {
-          await db.execute('''
-          UPDATE Player SET photo = NULL
-        ''');
+      /* json object will be like this:
+
+      {
+        "key" : [array],
+        "key" : [array],
+        ...
+      }
+
+      where "key" is the name of a table and array is the content of that table in this format:
+      [
+        {
+          "attr1" : value1,
+          "attr2" : value2,
+          ...
+        },
+        ...
+      ]
+
+      where attrN is the name of the column and valueN is the value.
+
+       */
+
+
+      Map<String, dynamic> jsonData = jsonDecode(File(path).readAsStringSync());
+
+      jsonData.forEach((tableName, tableContent) {
+        tableContent.forEach((tableRow) async {
+          await db.insert(tableName, tableRow);
         });
+      });
 
-        (await getApplicationDocumentsDirectory()).deleteSync(recursive: true);
-
-        File(dbPath).deleteSync();
-        File(tmpPath).renameSync(dbPath);
-
-        _instance = null; //this will destroy this instance and create a new one on the next DB.instance call
-
-        return true;
+      return true;
 
     } catch (e) {
 
-      print("Error importing database $path: ${e.toString()}");
+      print(e);
 
-      _instance = null; //this will destroy this instance and create a new one on the next DB.instance call
+      //close the corrupted database
+      db.close();
+
+      //delete it
+      deleteDatabase(dbPath);
+
+      //delete the reference to this instance so that the next db.instance call will create a new one
+      _instance = null;
 
       return false;
     }
