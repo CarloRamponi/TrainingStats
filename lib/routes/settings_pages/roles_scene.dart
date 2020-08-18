@@ -268,10 +268,12 @@ class _RolesSceneState extends State<RolesScene> {
   }
 
   void _editRoleName(Role r) {
-    setState(() {
-      _editing = true;
-      _editingRole = r;
-    });
+    if(!_editing) {
+      setState(() {
+        _editing = true;
+        _editingRole = r;
+      });
+    }
   }
 
   void _editingComplete() async {

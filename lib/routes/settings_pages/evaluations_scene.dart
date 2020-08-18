@@ -152,10 +152,12 @@ class _EvaluationsSceneState extends State<EvaluationsScene> {
   }
 
   void _editEvalName(Evaluation e) {
-    setState(() {
-      _editing = true;
-      _editingItem = e;
-    });
+    if(!_editing) {
+      setState(() {
+        _editing = true;
+        _editingItem = e;
+      });
+    }
   }
 
   void _editingComplete() async {

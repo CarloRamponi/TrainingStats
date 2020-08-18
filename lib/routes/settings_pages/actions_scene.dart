@@ -83,6 +83,9 @@ class _ActionsSceneState extends State<ActionsScene> {
                       onLongPress: () {
                         _removeAction(action);
                       },
+                      onTap: () {
+                        _editAction(action);
+                      },
                     );
                   },
                   separatorBuilder: (_, __) => Padding(
@@ -247,6 +250,95 @@ class _ActionsSceneState extends State<ActionsScene> {
       _refresh();
 
     _creatingAction = null;
+
+  }
+
+  void _editAction(LocalAction.Action action) async {
+
+    GlobalKey<FormState> _form = GlobalKey();
+    FocusNode shortNameFocusNode = FocusNode();
+
+    var result = await showDialog(context: context, builder: (context) => AlertDialog(
+      title: Text("Edit action"),
+      actions: [
+        FlatButton(
+          child: Text("Cancel"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        FlatButton(
+          child: Text("Update"),
+          onPressed: () async {
+            if(_form.currentState.validate()) {
+              await LocalAction.ActionProvider.update(action);
+              Navigator.of(context).pop(true);
+            }
+          },
+        )
+      ],
+      content: Container(
+        child: Form(
+            key: _form,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  initialValue: action.name,
+                  autofocus: true,
+                  onChanged: (value) {
+                    action.name = value;
+                  },
+                  onEditingComplete: () {
+                    shortNameFocusNode.requestFocus();
+                  },
+                  maxLength: 128,
+                  decoration: InputDecoration(
+                      hintText: "Action name",
+                      counterText: ""
+                  ),
+                  validator: (value) {
+                    if (value.isEmpty) {
+                      return "Enter some text";
+                    } else {
+                      return null;
+                    }
+                  },
+                ),
+                TextFormField(
+                  initialValue: action.shortName,
+                  focusNode: shortNameFocusNode,
+                  onChanged: (value) {
+                    action.shortName = value;
+                  },
+                  maxLength: 2,
+                  decoration: InputDecoration(
+                      hintText: "Action short name",
+                      counterText: ""
+                  ),
+                  validator: (value) {
+                    if (value.isEmpty) {
+                      return "Enter some text";
+                    } else {
+                      return null;
+                    }
+                  },
+                  onEditingComplete: () async {
+                    if(_form.currentState.validate()) {
+                      await LocalAction.ActionProvider.update(action);
+                      Navigator.of(context).pop(true);
+                    }
+                  },
+                ),
+              ],
+            )
+        ),
+      )
+    ));
+
+    if(result == true) {
+      _refresh();
+    }
 
   }
 
