@@ -42,7 +42,8 @@ class MyDrawer extends StatelessWidget {
             leading: Icon(Icons.home),
             title: Text("Home"),
             onTap: () {
-
+              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacementNamed("/");
             },
           ),
           ListTile(

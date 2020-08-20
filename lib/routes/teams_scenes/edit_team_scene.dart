@@ -42,17 +42,20 @@ class _EditTeamSceneState extends State<EditTeamScene> {
   @override
   void initState() {
     players = TeamProvider.getPlayers(widget.team.id);
-
     super.initState();
   }
 
   void _addPlayer() async {
     var result = await Navigator.of(context).pushNamed("/editTeam/addPlayer", arguments: widget.team);
     if(result == true) {
-      players = TeamProvider.getPlayers(widget.team.id)..then((value) {
-        setState(() {});
-      });
+      _refresh();
     }
+  }
+
+  void _refresh() {
+    setState(() {
+      players = TeamProvider.getPlayers(widget.team.id);
+    });
   }
 
   @override
@@ -77,15 +80,13 @@ class _EditTeamSceneState extends State<EditTeamScene> {
                     itemBuilder: (context, index) {
                       return PlayerListTile(
                         player: playerSnap.data[index],
-                        onTap: () {
-                          scaffoldKey.currentState.removeCurrentSnackBar();
-                          scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Not yet implemented."), duration: Duration(milliseconds: 700),));
+                        onTap: () async {
+                          await Navigator.of(context).pushNamed('/editPlayer', arguments: playerSnap.data[index]);
+                          _refresh();
                         },
                         onDelete: () {
                           TeamProvider.removePlayer(teamId: widget.team.id, playerId: playerSnap.data[index].id).then((value) {
-                            players = TeamProvider.getPlayers(widget.team.id)..then((value) {
-                              setState(() {});
-                            });
+                            _refresh();
                           });
                         },
                       );

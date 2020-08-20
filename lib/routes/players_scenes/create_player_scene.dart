@@ -207,6 +207,19 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
         key: scaffoldKey,
         appBar: AppBar(
           title: Text(edit ? 'Edit player' : 'Create player'),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.check),
+              onPressed: () {
+                if (formKey.currentState.validate()) {
+                  if(edit)
+                    editPlayer();
+                  else
+                    createPlayer();
+                }
+              },
+            )
+          ],
         ),
         body: SingleChildScrollView(
             child: Padding(
@@ -352,20 +365,6 @@ class _CreatePlayerSceneState extends State<CreatePlayerScene> {
                         );
                       } else {
                         return CircularProgressIndicator();
-                      }
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 25.0),
-                  child: creating ? CircularProgressIndicator() : RaisedButton(
-                    child: Text(edit ? "Edit" : "Create"),
-                    onPressed: () {
-                      if (formKey.currentState.validate()) {
-                        if(edit)
-                          editPlayer();
-                        else
-                          createPlayer();
                       }
                     },
                   ),

@@ -26,6 +26,9 @@ import 'package:training_stats/datatypes/exercise_data.dart';
 import 'package:training_stats/datatypes/player_data.dart';
 import 'package:training_stats/datatypes/training_data.dart';
 import 'package:training_stats/routes/collect_data_scene.dart';
+import 'package:training_stats/routes/home_scenes/home_scene.dart';
+import 'package:training_stats/routes/home_scenes/score_keeper_scenes/score_keeper_config_scene.dart';
+import 'package:training_stats/routes/home_scenes/score_keeper_scenes/score_keeper_scene.dart';
 import 'package:training_stats/routes/players_scenes/create_player_scene.dart';
 import 'package:training_stats/routes/settings_pages/about_scene.dart';
 import 'package:training_stats/routes/settings_pages/actions_scene.dart';
@@ -44,6 +47,8 @@ class RouteGenerator {
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
 
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
     final args = settings.arguments;
 
     switch (settings.name) {
@@ -52,8 +57,27 @@ class RouteGenerator {
 
         return MaterialPageRoute(
           builder: (_) {
-            return TeamsScene();
+            return HomeScene();
           });
+
+        break;
+
+      case "/score_keeper":
+        return MaterialPageRoute(
+            builder: (_) {
+              return ScoreKeeperConfigScene();
+            });
+
+        break;
+
+      case "/score_keeper/main":
+
+        SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return ScoreKeeperScene(config: args,);
+            });
 
         break;
 

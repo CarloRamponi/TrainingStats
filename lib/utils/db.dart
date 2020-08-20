@@ -108,6 +108,17 @@ class DB {
           `color` INTEGER NULL)
       ''');
 
+    await db.execute('''
+        CREATE TABLE `ScoreKeeperConfig` (
+          `setsToWin` INTEGER,
+          `pointsPerSet` INTEGER,
+          `lastSetPoints` INTEGER,
+          `belowZero` INTEGER,
+          `advantages` INTEGER,
+          `lastSetAdvantages` INTEGER
+        )
+    ''');
+
   }
 
   Future<void> _insertDefaults(Database db, int version) async {
@@ -139,6 +150,10 @@ class DB {
           ('Attack', 'A', ${0xff2196f3}),
           ('Set', 'ST', ${0xff4caf50})
       ''');
+
+    await db.execute('''
+        INSERT INTO `ScoreKeeperConfig` (setsToWin, pointsPerSet, lastSetPoints, belowZero, advantages, lastSetAdvantages) VALUES (2, 25, 15, 0, 1, 0)
+    ''');
 
   }
 
@@ -174,7 +189,8 @@ class DB {
       "Player" : (await db.query('Player')).map((e) => Map.from(e)..remove("photo")).toList(),
       "Team" : await db.query('Team'),
       "PlayerTeam" : await db.query('PlayerTeam'),
-      "Action" : await db.query('Action')
+      "Action" : await db.query('Action'),
+      "ScoreKeeperConfig" : await db.query('ScoreKeeperConfig'),
     };
 
     String exportJson = jsonEncode(export);
@@ -199,7 +215,9 @@ class DB {
 
     try {
 
-      /* json object will be like this:
+      /*
+
+      json object will be like this:
 
       {
         "key" : [array],
