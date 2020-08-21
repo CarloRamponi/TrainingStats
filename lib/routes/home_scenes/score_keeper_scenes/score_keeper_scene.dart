@@ -155,19 +155,7 @@ class _ScoreKeeperSceneState extends State<ScoreKeeperScene> {
   }
 
   bool _setPoint(int team) {
-    if(_lastSet()) {
-      if(widget.config.lastSetAdvantages) {
-        return points[setNumber][team] >= widget.config.lastSetPoints - 1 && points[setNumber][team] > points[setNumber][1-team];
-      } else {
-        return points[setNumber][team] == widget.config.lastSetPoints - 1;
-      }
-    } else {
-      if(widget.config.advantages) {
-        return points[setNumber][team] >= widget.config.pointsPerSet - 1 && points[setNumber][team] > points[setNumber][1-team];
-      } else {
-        return points[setNumber][team] == widget.config.pointsPerSet - 1;
-      }
-    }
+    return points[setNumber][team] == _getCurrentMaxPoints() - 1;
   }
 
   Future<bool> _confirmExit() async {
@@ -486,7 +474,7 @@ class _ScoreKeeperSceneState extends State<ScoreKeeperScene> {
                     visible: !_gameEnded && _setPoint(team),
                     child: Blinker(
                       child: Text(
-                        "SET POINT",
+                        _lastSet() || wonSets[team] == widget.config.setsToWin - 1 ? "MATCH POINT" :  "SET POINT",
                         style: Theme.of(context).textTheme.button.copyWith(color: Colors.green),
                       ),
                     ),
@@ -560,45 +548,52 @@ class _ScoreKeeperSceneState extends State<ScoreKeeperScene> {
                 Container(
                   height: 55.0,
                   padding: EdgeInsets.all(5.0),
-                  child: Row(
+                  child: Stack(
+                    alignment: Alignment.center,
+                    fit: StackFit.expand,
                     children: [
-                      FlatButton(
+                      Positioned(
+                        left: 0.0,
+                        child: FlatButton(
                           child: Text("Exit"),
                           onPressed: () async {
                             if (await _willPopCallback())
                               Navigator.of(context).pop();
                           }),
-                      Expanded(
-                        child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  "SET ${setNumber + 1}",
-                                  style: Theme.of(context).textTheme.headline5,
-                                ),
-                                Text(
-                                  "${timer.inMinutes.toString().padLeft(2, '0')}:${(timer.inSeconds % 60).toString().padLeft(2, '0')}",
-                                  style: Theme.of(context).textTheme.caption,
-                                )
-                              ],
-                            )),
                       ),
-                      _gameEnded ? FlatButton(
-                        child: Text("Restart"),
-                        onPressed: () async {
-                          if(await _confirmRestart()) {
-                            initState();
-                            setState(() {});
-                          }
-                        },
-                      ) : FlatButton(
-                        child: Text("End game"),
-                        onPressed: () async {
-                          if(await _confirmEndGame()) {
-                            _endGame();
-                          }
-                        },
+                      Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "SET ${setNumber + 1}",
+                              style: Theme.of(context).textTheme.headline5,
+                            ),
+                            Text(
+                              "${timer.inMinutes.toString().padLeft(2, '0')}:${(timer.inSeconds % 60).toString().padLeft(2, '0')}",
+                              style: Theme.of(context).textTheme.caption,
+                            )
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        right: 0.0,
+                        child: _gameEnded ? FlatButton(
+                          child: Text("Restart"),
+                          onPressed: () async {
+                            if(await _confirmRestart()) {
+                              initState();
+                              setState(() {});
+                            }
+                          },
+                        ) : FlatButton(
+                          child: Text("End game"),
+                          onPressed: () async {
+                            if(await _confirmEndGame()) {
+                              _endGame();
+                            }
+                          },
+                        ),
                       ),
                     ],
                   ),
