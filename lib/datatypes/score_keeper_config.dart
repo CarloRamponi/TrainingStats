@@ -61,7 +61,11 @@ class ScoreKeeperConfig {
     String json = (await SharedPreferences.getInstance()).getString('ScoreKeeperConfig');
 
     if(json != null) {
-      return ScoreKeeperConfig.fromMap(jsonDecode(json));
+      try {
+        return ScoreKeeperConfig.fromMap(jsonDecode(json));
+      } catch(e) {
+        return ScoreKeeperConfig();
+      }
     } else {
       return ScoreKeeperConfig();
     }

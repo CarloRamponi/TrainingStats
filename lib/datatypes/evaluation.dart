@@ -85,8 +85,12 @@ class EvaluationProvider {
     String json = (await SharedPreferences.getInstance()).getString('Evaluations');
 
     if(json != null) {
-      List<dynamic> maps = jsonDecode(json);
-      return maps.map((e) => Evaluation.fromMap(e)).toList();
+      try {
+        List<dynamic> maps = jsonDecode(json);
+        return maps.map((e) => Evaluation.fromMap(e)).toList();
+      } catch (e) {
+        return _default();
+      }
     } else {
       return _default();
     }
