@@ -22,6 +22,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:training_stats/datatypes/score_keeper_config.dart';
+import 'package:training_stats/widgets/blinker.dart';
 
 class ScoreKeeperScene extends StatefulWidget {
   final ScoreKeeperConfig config;
@@ -132,6 +133,27 @@ class _ScoreKeeperSceneState extends State<ScoreKeeperScene> {
     });
   }
 
+  int _getCurrentMaxPoints() {
+
+    int normalPoints = _lastSet() ? widget.config.lastSetPoints : widget.config.pointsPerSet;
+    bool adv = _lastSet() ? widget.config.lastSetAdvantages : widget.config.advantages;
+
+    if(adv) {
+      if(points[setNumber][0] == points[setNumber][1]) {
+        return max(normalPoints, points[setNumber][0] + 2);
+      } else if(points[setNumber][0] == points[setNumber][1] + 1) {
+        return max(normalPoints, points[setNumber][0] + 1);
+      } else if(points[setNumber][1] == points[setNumber][0] + 1) {
+        return max(normalPoints, points[setNumber][1] + 1);
+      } else {
+        return normalPoints;
+      }
+    } else {
+      return normalPoints;
+    }
+
+  }
+
   bool _setPoint(int team) {
     if(_lastSet()) {
       if(widget.config.lastSetAdvantages) {
@@ -233,6 +255,94 @@ class _ScoreKeeperSceneState extends State<ScoreKeeperScene> {
   }
 
   Widget _buildTeamPanel(int team) {
+
+    Widget setList = Container(
+      width: (setNumber + 1) * 25.0,
+      child: Row(
+        children: List<Widget>.generate(
+          (setNumber + 1) * 2,
+              (index) {
+            if (index % 2 == 0) {
+              return VerticalDivider(width: 0.0);
+            } else {
+              int setIndex = index ~/ 2;
+
+              Color backgroundColor;
+
+              //if it's not the running set
+              if (setIndex < setNumber || _gameEnded) {
+                if (points[setIndex][team] >
+                    points[setIndex][1 -
+                        team]) //if this team scored more points
+                  backgroundColor =
+                      Colors.green.withOpacity(0.3);
+                else if (points[setIndex][team] <
+                    points[setIndex][1 -
+                        team]) //if this team scored less points
+                  backgroundColor =
+                      Colors.red.withOpacity(0.3);
+                else //if both teams scored the same points
+                  backgroundColor =
+                      Colors.transparent;
+              } else {
+                backgroundColor =
+                    Colors.transparent;
+              }
+
+              Color foregroundColor;
+
+              //if it is the running set
+              if (setIndex == setNumber && !_gameEnded) {
+                if (points[setIndex][team] >
+                    points[setIndex][1 - team])
+                  foregroundColor = Colors.green;
+                else if (points[setIndex][team] <
+                    points[setIndex][1 - team])
+                  foregroundColor = Colors.red;
+                else
+                  foregroundColor = Colors.black;
+              } else {
+                foregroundColor = Colors.black;
+              }
+
+              return AnimatedContainer(
+                duration: Duration(
+                    milliseconds: 500),
+                color: backgroundColor,
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Expanded(
+                      child: Container(
+                          width: 25.0,
+                          child: Center(
+                            child: Text((
+                                setIndex + 1)
+                                .toString()
+                            ),
+                          )),
+                    ),
+                    Expanded(
+                      child: Container(
+                          width: 25.0,
+                          child: Center(
+                            child: Text(
+                              points[setIndex][team]
+                                  .toString(),
+                              style: TextStyle(
+                                  color: foregroundColor
+                              ),
+                            ),
+                          )),
+                    )
+                  ],
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
     
     return Center(
       child: Column(
@@ -287,135 +397,50 @@ class _ScoreKeeperSceneState extends State<ScoreKeeperScene> {
                       ),
                     ),
                     Card(
-                        margin: EdgeInsets.only(left: 5.0),
-                        child: AnimatedContainer(
-                          duration: Duration(milliseconds: 500),
-                          curve: Curves.easeOutBack,
-                          height: 50.0,
-                          width: 60.0 + min(125.0, (setNumber + 1) * 25.0),
-                          child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              children: <Widget>[
-                                Column(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: [
-                                      Expanded(
-                                        child: Container(
-                                            width: 60.0,
-                                            child: Center(
-                                              child: Text("SET"),
-                                            )),
-                                      ),
-                                      Expanded(
-                                        child: Container(
-                                            width: 60.0,
-                                            child: Center(
-                                              child: Text("POINTS"),
-                                            )),
-                                      )
-                                    ]),
-                                Expanded(
-                                  child: Container(
-                                    clipBehavior: Clip.hardEdge,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.only(topRight: Radius.circular(3.0), bottomRight: Radius.circular(3.0))
+                      margin: EdgeInsets.only(left: 5.0),
+                      child: AnimatedContainer(
+                        duration: Duration(milliseconds: 500),
+                        curve: Curves.easeOutBack,
+                        height: 50.0,
+                        width: 60.0 + min(125.0, (setNumber + 1) * 25.0),
+                        child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: <Widget>[
+                              Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                          width: 60.0,
+                                          child: Center(
+                                            child: Text("SET"),
+                                          )),
                                     ),
-                                    child: SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        reverse: true,
-                                        child: Container(
-                                          width: (setNumber + 1) * 25.0,
-                                          child: Row(
-                                            children: List<Widget>.generate(
-                                              (setNumber + 1) * 2,
-                                                  (index) {
-                                                if (index % 2 == 0) {
-                                                  return VerticalDivider(width: 0.0);
-                                                } else {
-                                                  int setIndex = index ~/ 2;
-
-                                                  Color backgroundColor;
-
-                                                  //if it's not the running set
-                                                  if (setIndex < setNumber || _gameEnded) {
-                                                    if (points[setIndex][team] >
-                                                        points[setIndex][1 -
-                                                            team]) //if this team scored more points
-                                                      backgroundColor =
-                                                          Colors.green.withOpacity(0.3);
-                                                    else if (points[setIndex][team] <
-                                                        points[setIndex][1 -
-                                                            team]) //if this team scored less points
-                                                      backgroundColor =
-                                                          Colors.red.withOpacity(0.3);
-                                                    else //if both teams scored the same points
-                                                      backgroundColor =
-                                                          Colors.transparent;
-                                                  } else {
-                                                    backgroundColor =
-                                                        Colors.transparent;
-                                                  }
-
-                                                  Color foregroundColor;
-
-                                                  //if it is the running set
-                                                  if (setIndex == setNumber && !_gameEnded) {
-                                                    if (points[setIndex][team] >
-                                                        points[setIndex][1 - team])
-                                                      foregroundColor = Colors.green;
-                                                    else if (points[setIndex][team] <
-                                                        points[setIndex][1 - team])
-                                                      foregroundColor = Colors.red;
-                                                    else
-                                                      foregroundColor = Colors.black;
-                                                  } else {
-                                                    foregroundColor = Colors.black;
-                                                  }
-
-                                                  return AnimatedContainer(
-                                                    duration: Duration(
-                                                        milliseconds: 500),
-                                                    color: backgroundColor,
-                                                    child: Column(
-                                                      mainAxisSize: MainAxisSize.max,
-                                                      children: [
-                                                        Expanded(
-                                                          child: Container(
-                                                              width: 25.0,
-                                                              child: Center(
-                                                                child: Text((
-                                                                    setIndex + 1)
-                                                                    .toString()
-                                                                ),
-                                                              )),
-                                                        ),
-                                                        Expanded(
-                                                          child: Container(
-                                                              width: 25.0,
-                                                              child: Center(
-                                                                child: Text(
-                                                                  points[setIndex][team]
-                                                                      .toString(),
-                                                                  style: TextStyle(
-                                                                      color: foregroundColor
-                                                                  ),
-                                                                ),
-                                                              )),
-                                                        )
-                                                      ],
-                                                    ),
-                                                  );
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                        )
-                                    ),
+                                    Expanded(
+                                      child: Container(
+                                          width: 60.0,
+                                          child: Center(
+                                            child: Text("POINTS"),
+                                          )),
+                                    )
+                                  ]),
+                              Expanded(
+                                child: Container(
+                                  clipBehavior: Clip.hardEdge,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.only(topRight: Radius.circular(4.0), bottomRight: Radius.circular(4.0))
                                   ),
-                                )
-                              ]
-                          ),
-                        ))
+                                  child: setNumber < 5 ? setList : SingleChildScrollView( //if there are less than 5 previous sets there is no need to use scrollview
+                                      scrollDirection: Axis.horizontal,
+                                      reverse: true,
+                                      child: setList
+                                  ),
+                                ),
+                              )
+                            ]
+                        ),
+                      )
+                    )
                   ],
                 ),
               ),
@@ -424,6 +449,7 @@ class _ScoreKeeperSceneState extends State<ScoreKeeperScene> {
           Expanded(
             child: Stack(
               alignment: Alignment.center,
+              fit: StackFit.expand,
               children: [
                 AnimatedPositioned(
                   duration: Duration(milliseconds: 500),
@@ -435,11 +461,42 @@ class _ScoreKeeperSceneState extends State<ScoreKeeperScene> {
                         .textTheme
                         .headline1
                         .copyWith(fontWeight: FontWeight.bold),
+                  )
+                ),
+                Center(
+                  child: AnimatedOpacity(
+                    duration: Duration(milliseconds: 500),
+                    opacity: _gameEnded ? 0.0: 1.0,
+                    child: Container(
+                      margin: EdgeInsets.only(left: 160.0),
+                      child: Text(
+                        "/"+ (_getCurrentMaxPoints()).toString().padLeft(2, '0'),
+                        style: Theme
+                            .of(context)
+                            .textTheme
+                            .headline1
+                            .copyWith(fontWeight: FontWeight.bold, fontSize: 20.0),
+                      ),
+                    ),
+                  )
+                ),
+                Positioned(
+                  top: 5.0,
+                  child: Visibility(
+                    visible: !_gameEnded && _setPoint(team),
+                    child: Blinker(
+                      child: Text(
+                        "SET POINT",
+                        style: Theme.of(context).textTheme.button.copyWith(color: Colors.green),
+                      ),
+                    ),
                   ),
                 ),
-                if(!_gameEnded)
-                  Positioned(
-                    bottom: 0.0,
+                Positioned(
+                  bottom: 0.0,
+                  child: AnimatedOpacity(
+                    duration: Duration(milliseconds: 500),
+                    opacity: _gameEnded ? 0.0: 1.0,
                     child: Card(
                         margin: EdgeInsets.only(left: 20.0, right: 20.0, bottom: 20.0),
                         child: Container(
@@ -481,6 +538,7 @@ class _ScoreKeeperSceneState extends State<ScoreKeeperScene> {
                           ),
                         ))
                   )
+                ),
               ],
             ),
           )

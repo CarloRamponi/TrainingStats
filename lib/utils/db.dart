@@ -58,12 +58,6 @@ class DB {
       ''');
 
     await db.execute('''
-        CREATE TABLE `Evaluation` (
-          `value` INTEGER PRIMARY KEY,
-          `name` CHAR(2) NULL)
-      ''');
-
-    await db.execute('''
         CREATE TABLE `Player` (
           `id` INTEGER PRIMARY KEY AUTOINCREMENT,
           `name` VARCHAR(128) NULL,
@@ -108,30 +102,9 @@ class DB {
           `color` INTEGER NULL)
       ''');
 
-    await db.execute('''
-        CREATE TABLE `ScoreKeeperConfig` (
-          `setsToWin` INTEGER,
-          `pointsPerSet` INTEGER,
-          `lastSetPoints` INTEGER,
-          `belowZero` INTEGER,
-          `advantages` INTEGER,
-          `lastSetAdvantages` INTEGER
-        )
-    ''');
-
   }
 
   Future<void> _insertDefaults(Database db, int version) async {
-
-    await db.execute('''
-        INSERT INTO `Evaluation` (value, name) VALUES
-        (3, '#'),
-        (2, '+'),
-        (1, '!'),
-        (-1, '/'),
-        (-2, '-'),
-        (-3, '=')
-      ''');
 
     await db.execute('''
         INSERT INTO `Role` (name, color) VALUES
@@ -150,10 +123,6 @@ class DB {
           ('Attack', 'A', ${0xff2196f3}),
           ('Set', 'ST', ${0xff4caf50})
       ''');
-
-    await db.execute('''
-        INSERT INTO `ScoreKeeperConfig` (setsToWin, pointsPerSet, lastSetPoints, belowZero, advantages, lastSetAdvantages) VALUES (2, 25, 15, 0, 1, 0)
-    ''');
 
   }
 
@@ -185,12 +154,10 @@ class DB {
 
     Map<String, dynamic> export = {
       "Role" : await db.query('Role'),
-      "Evaluation" : await db.query('Evaluation'),
       "Player" : (await db.query('Player')).map((e) => Map.from(e)..remove("photo")).toList(),
       "Team" : await db.query('Team'),
       "PlayerTeam" : await db.query('PlayerTeam'),
-      "Action" : await db.query('Action'),
-      "ScoreKeeperConfig" : await db.query('ScoreKeeperConfig'),
+      "Action" : await db.query('Action')
     };
 
     String exportJson = jsonEncode(export);

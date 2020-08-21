@@ -18,10 +18,11 @@
  
  
 
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:training_stats/utils/db.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Evaluation {
   int value;
@@ -68,15 +69,37 @@ class Evaluation {
 
 class EvaluationProvider {
 
-  static Future<List<Evaluation>> getAll() async {
-    List<Map<String, dynamic>> teams = await (await DB.instance).db.query('Evaluation', orderBy: 'value DESC',);
-    return teams.map((m) => Evaluation.fromMap(m)).toList();
+  static List<Evaluation> _default() {
+    return [
+      Evaluation(value: -3, name: "="),
+      Evaluation(value: -2, name: "-"),
+      Evaluation(value: -1, name: "/"),
+      Evaluation(value: 1, name: "!"),
+      Evaluation(value: 2, name: "+"),
+      Evaluation(value: 3, name: "#")
+    ];
   }
 
-  static Future<int> update(Evaluation eval) async {
-    return await (await DB.instance).db.update(
-        'Evaluation', eval.toMap()..remove('value'),
-        where: 'value = ?', whereArgs: [eval.value]);
+  static Future<List<Evaluation>> getAll() async {
+
+    String json = (await SharedPreferences.getInstance()).getString('Evaluations');
+
+    if(json != null) {
+      List<dynamic> maps = jsonDecode(json);
+      return maps.map((e) => Evaluation.fromMap(e)).toList();
+    } else {
+      return _default();
+    }
+  }
+
+  static Future<bool> update(Evaluation eval) async {
+
+    List<Evaluation> all = await getAll();
+    all[all.indexWhere((element) => element.value == eval.value)].name = eval.name;
+
+    String json = jsonEncode(all.map((e) => e.toMap()).toList());
+    return await (await SharedPreferences.getInstance()).setString('Evaluations', json);
+
   }
 
 }

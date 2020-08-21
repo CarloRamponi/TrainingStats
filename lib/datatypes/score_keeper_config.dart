@@ -16,7 +16,9 @@
  *
  */
 
-import 'package:training_stats/utils/db.dart';
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ScoreKeeperConfig {
 
@@ -27,28 +29,48 @@ class ScoreKeeperConfig {
   bool advantages;
   bool lastSetAdvantages;
 
-  ScoreKeeperConfig({this.setsToWin, this.pointsPerSet, this.lastSetPoints, this.belowZero, this.advantages, this.lastSetAdvantages});
+  ScoreKeeperConfig({
+    this.setsToWin = 2,
+    this.pointsPerSet = 25,
+    this.lastSetPoints = 15,
+    this.belowZero = false,
+    this.advantages = true,
+    this.lastSetAdvantages = false
+  });
 
   static ScoreKeeperConfig fromMap(Map<String, dynamic> m) => ScoreKeeperConfig(
     setsToWin : m['setsToWin'],
     pointsPerSet: m['pointsPerSet'],
     lastSetPoints: m['lastSetPoints'],
-    belowZero: m['belowZero'] == 1,
-    advantages: m['advantages'] == 1,
-    lastSetAdvantages: m['lastSetAdvantages'] == 1,
+    belowZero: m['belowZero'],
+    advantages: m['advantages'],
+    lastSetAdvantages: m['lastSetAdvantages'],
   );
 
   Map<String, dynamic> toMap() => {
     'setsToWin': this.setsToWin,
     'pointsPerSet': this.pointsPerSet,
     'lastSetPoints': this.lastSetPoints,
-    'belowZero': this.belowZero ? 1 : 0,
-    'advantages': this.advantages ? 1 : 0,
-    'lastSetAdvantages': this.lastSetAdvantages ? 1 : 0,
+    'belowZero': this.belowZero,
+    'advantages': this.advantages,
+    'lastSetAdvantages': this.lastSetAdvantages,
   };
 
-  static Future<ScoreKeeperConfig> load() async => ScoreKeeperConfig.fromMap((await (await DB.instance).db.query('ScoreKeeperConfig')).first);
+  static Future<ScoreKeeperConfig> load() async {
 
-  Future<int> update() async => await (await DB.instance).db.update('ScoreKeeperConfig', this.toMap());
+    String json = (await SharedPreferences.getInstance()).getString('ScoreKeeperConfig');
+
+    if(json != null) {
+      return ScoreKeeperConfig.fromMap(jsonDecode(json));
+    } else {
+      return ScoreKeeperConfig();
+    }
+
+  }
+
+  Future<bool> update() async {
+    String json = jsonEncode(this.toMap());
+    return await (await SharedPreferences.getInstance()).setString('ScoreKeeperConfig', json);
+  }
 
 }
