@@ -18,14 +18,27 @@
  
  
 
-class PlayerData {
 
-  PlayerData({this.shortName, this.fullName});
+import 'package:training_stats/datatypes/action.dart';
+import 'package:training_stats/datatypes/player.dart';
+import 'package:training_stats/datatypes/team.dart';
 
-  String fullName;
+class Training {
 
-  //short name could be, for example, the player's number
-  String shortName;
+  Training({
+    this.team,
+    this.players,
+    this.actions,
+    this.timestamp
+  }) {
+    if(this.timestamp == null) {
+      this.timestamp = DateTime.now();
+    }
+  }
 
+  DateTime timestamp;
+  Team team;
+  List<Player> players;
+  List<Action> actions;
 
 }

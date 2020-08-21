@@ -20,22 +20,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:training_stats/datatypes/record_data.dart';
-import 'package:training_stats/datatypes/training_data.dart';
+import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/widgets/evaluation_board.dart';
 import 'package:training_stats/widgets/evaluation_history_board.dart';
 import 'package:training_stats/widgets/grid_segmented_control.dart';
 
+class SimpleScoutScene extends StatefulWidget {
+  SimpleScoutScene({Key key, this.training}) : super(key: key);
 
-class CollectDataScene extends StatefulWidget {
-  CollectDataScene({Key key, this.training}) : super(key: key);
-
-  final TrainingData training;
+  final Training training;
 
   @override
-  _CollectDataSceneState createState() => _CollectDataSceneState();
+  _SimpleScoutSceneState createState() => _SimpleScoutSceneState();
 }
 
-class _CollectDataSceneState extends State<CollectDataScene> {
+class _SimpleScoutSceneState extends State<SimpleScoutScene> {
 
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<EvaluationHistoryBoardState> evalHistoryKey = GlobalKey<EvaluationHistoryBoardState>();
@@ -112,7 +111,7 @@ class _CollectDataSceneState extends State<CollectDataScene> {
     return Scaffold(
       key: scaffoldKey,
       appBar: AppBar(
-        title: Text(widget.training.exercise.name),
+        title: Text("Simple scout"),
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.stop),

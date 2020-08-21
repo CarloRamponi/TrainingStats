@@ -21,8 +21,8 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:training_stats/datatypes/action_data.dart';
-import 'package:training_stats/datatypes/player_data.dart';
+import 'package:training_stats/datatypes/action.dart' as TrainingStatsAction;
+import 'package:training_stats/datatypes/player.dart';
 
 class RecordData {
 
@@ -32,8 +32,8 @@ class RecordData {
     }
   }
 
-  PlayerData player;
-  ActionData action;
+  Player player;
+  TrainingStatsAction.Action action;
   int evaluation;
   DateTime timestamp;
 

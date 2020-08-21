@@ -18,16 +18,24 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:training_stats/datatypes/action.dart' as TrainingStatsAction;
+import 'package:training_stats/datatypes/player.dart';
+import 'package:training_stats/datatypes/team.dart';
+import 'package:training_stats/datatypes/training.dart';
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/actions_selection_scene.dart';
+import 'package:training_stats/routes/players_scenes/players_selection_scene.dart';
+import 'package:training_stats/routes/teams_scenes/team_selection.dart';
 import 'package:training_stats/widgets/drawer.dart';
 
 class FunctionalityDescription {
 
-  String title, description, route;
+  String title, description;
+  void Function(BuildContext) onTap;
 
   FunctionalityDescription({
     this.title,
     this.description,
-    this.route
+    this.onTap
   });
 
 }
@@ -38,47 +46,69 @@ class HomeScene extends StatelessWidget  {
     FunctionalityDescription(
       title: "Score keeper",
       description: "The name says it all, it's just a score keeper.",
-      route: "/score_keeper"
+      onTap: (context) => Navigator.of(context).pushNamed("/score_keeper")
     ),
     FunctionalityDescription(
         title: "Classic scout",
         description: "The classical scouting, in which you record all the ball touches.",
-        route: "/scout"
+        onTap: (context) async {
+
+          Team team = await Navigator.push(context, MaterialPageRoute<Team>(
+            builder: (context) => SelectTeam()
+          ));
+
+          List<Player> players = await Navigator.push(context, MaterialPageRoute<List<Player>>(
+            builder: (context) => PlayersSelectionScene(team: team)
+          ));
+
+          List<TrainingStatsAction.Action> actions = await Navigator.of(context).push(MaterialPageRoute<List<TrainingStatsAction.Action>>(
+            builder: (context) => ActionsSelectionScene()
+          ));
+
+          Training training = Training(
+            team: team,
+            players: players,
+            actions: actions
+          );
+
+          Navigator.of(context).pushNamed("/simple_scout", arguments: training);
+
+        }
     ),
     FunctionalityDescription(
         title: "Title",
         description: "Description",
-        route: "/score_keeper"
+        onTap: (context) {}
     ),
     FunctionalityDescription(
         title: "Title",
         description: "Description",
-        route: "/score_keeper"
+        onTap: (context) {}
     ),
     FunctionalityDescription(
         title: "Title",
         description: "Description",
-        route: "/score_keeper"
+        onTap: (context) {}
     ),
     FunctionalityDescription(
         title: "Title",
         description: "Description",
-        route: "/score_keeper"
+        onTap: (context) {}
     ),
     FunctionalityDescription(
         title: "Title",
         description: "Description",
-        route: "/score_keeper"
+        onTap: (context) {}
     ),
     FunctionalityDescription(
         title: "Title",
         description: "Description",
-        route: "/score_keeper"
+        onTap: (context) {}
     ),
     FunctionalityDescription(
         title: "Title",
         description: "Description",
-        route: "/score_keeper"
+        onTap: (context) {}
     ),
   ];
 
@@ -108,7 +138,7 @@ class HomeScene extends StatelessWidget  {
           FlatButton(
             child: Text("START", style: TextStyle(color: Colors.green),),
             onPressed: () {
-              Navigator.of(context).pushNamed(f.route);
+              f.onTap(context);
             },
           )
         ],
