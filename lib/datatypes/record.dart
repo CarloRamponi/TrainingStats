@@ -16,17 +16,13 @@
  * 
  */
  
- 
 
-import 'dart:ui';
-
-import 'package:flutter/material.dart';
 import 'package:training_stats/datatypes/action.dart' as TrainingStatsAction;
 import 'package:training_stats/datatypes/player.dart';
 
-class RecordData {
+class Record {
 
-  RecordData({this.player, this.action, this.evaluation, this.timestamp}) {
+  Record({this.player, this.action, this.evaluation, this.timestamp}) {
     if(this.timestamp == null) {
       this.timestamp = DateTime.now();
     }
@@ -36,20 +32,5 @@ class RecordData {
   TrainingStatsAction.Action action;
   int evaluation;
   DateTime timestamp;
-
-  Color getEvalColor() {
-    switch(evaluation) {
-      case -2:
-        return Colors.red;
-      case -1:
-        return Colors.orange;
-      case 1:
-        return Colors.yellow;
-      case 2:
-        return Colors.green;
-      default:
-        return Colors.brown;
-    }
-  }
 
 }

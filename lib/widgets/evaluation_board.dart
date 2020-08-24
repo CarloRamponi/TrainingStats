@@ -19,64 +19,284 @@
  
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:training_stats/datatypes/board_type.dart';
+import 'package:training_stats/datatypes/evaluation.dart';
 
 class EvaluationBoard extends StatefulWidget {
-  EvaluationBoard({Key key, @required this.onPressed}) : super(key: key);
+
+  EvaluationBoard({
+    Key key,
+    @required this.onPressed,
+    this.boardType,
+    this.showLabels = true
+  }) : super(key: key);
 
   final bool Function(int) onPressed;
-
+  final BoardType boardType;
+  final bool showLabels;
+  
   @override
-  _EvaluationBoardState createState() => _EvaluationBoardState();
+  EvaluationBoardState createState() => EvaluationBoardState();
+  
 }
 
-class _EvaluationBoardState extends State<EvaluationBoard> {
+class EvaluationBoardState extends State<EvaluationBoard> {
+
+  Map<int, String> evaluations;
+  
+  @override
+  void initState() {
+    refreshLabels();
+    super.initState();
+  }
+  
+  void refreshLabels() {
+    EvaluationProvider.getAll().then((value) {
+      setState(() {
+        evaluations = value;
+      });
+    });
+  }
+  
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Container(
-        height: 40,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Expanded(
-                child:
-                FlatButton(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topLeft: Radius.circular(3), bottomLeft: Radius.circular(3))),
-                  child: null,
-                  color: Colors.red,
-                  onPressed: () { widget.onPressed(-2); },
-                )
+
+    switch(widget.boardType) {
+
+      case BoardType.COMPLETE:
+
+        return Card(
+          child: Container(
+              clipBehavior: Clip.hardEdge,
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(3.0)
+              ),
+              height: 80.0,
+              child: Column(
+                children: [
+                  Container(
+                    height: 40.0,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Expanded(
+                            child:
+                            FlatButton(
+                              shape: ContinuousRectangleBorder(),
+                              child: widget.showLabels ? Center(
+                                child: evaluations == null ? null : Text(
+                                    evaluations[-3]
+                                ),
+                              ) : null,
+                              color: Evaluation.getColor(-3),
+                              onPressed: () { widget.onPressed(-3); },
+                            )
+                        ),
+                        Expanded(
+                            child:
+                            FlatButton(
+                              shape: ContinuousRectangleBorder(),
+                              child: widget.showLabels ? Center(
+                                child: evaluations == null ? null : Text(
+                                    evaluations[3]
+                                ),
+                              ) : null,
+                              color: Evaluation.getColor(3),
+                              onPressed: () { widget.onPressed(3); },
+                            )
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    height: 40.0,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        Expanded(
+                            child:
+                            FlatButton(
+                              shape: ContinuousRectangleBorder(),
+                              child: widget.showLabels ? Center(
+                                child: evaluations == null ? null : Text(
+                                    evaluations[-2]
+                                ),
+                              ) : null,
+                              color: Evaluation.getColor(-2),
+                              onPressed: () { widget.onPressed(-2); },
+                            )
+                        ),
+                        Expanded(
+                            child:
+                            FlatButton(
+                              shape: ContinuousRectangleBorder(),
+                              child: widget.showLabels ? Center(
+                                child: evaluations == null ? null : Text(
+                                    evaluations[-1]
+                                ),
+                              ) : null,
+                              color: Evaluation.getColor(-1),
+                              onPressed: () { widget.onPressed(-1); },
+                            )
+                        ),
+                        Expanded(
+                            child:
+                            FlatButton(
+                              shape: ContinuousRectangleBorder(),
+                              child: widget.showLabels ? Center(
+                                child: evaluations == null ? null : Text(
+                                    evaluations[1]
+                                ),
+                              ) : null,
+                              color: Evaluation.getColor(1),
+                              onPressed: () { widget.onPressed(1); },
+                            )
+                        ),
+                        Expanded(
+                            child:
+                            FlatButton(
+                              shape: ContinuousRectangleBorder(),
+                              child: widget.showLabels ? Center(
+                                child: evaluations == null ? null : Text(
+                                    evaluations[2]
+                                ),
+                              ) : null,
+                              color: Evaluation.getColor(2),
+                              onPressed: () { widget.onPressed(2); },
+                            )
+                        )
+                      ],
+                    ),
+                  )
+                ],
+              )
+          ),
+        );
+
+        break;
+
+      case BoardType.SIMPLE:
+
+        return Card(
+          child: Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(3.0)
             ),
-            Expanded(
-                child:
-                FlatButton(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                  child: null,
-                  color: Colors.orange,
-                  onPressed: () { widget.onPressed(-1); },
-                )
+            height: 50.0,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Expanded(
+                    child:
+                    FlatButton(
+                      shape: ContinuousRectangleBorder(),
+                      child: widget.showLabels ? Center(
+                        child: evaluations == null ? null : Text(
+                                    evaluations[-3]
+                        ),
+                      ) : null,
+                      color: Evaluation.getColor(-3),
+                      onPressed: () { widget.onPressed(-3); },
+                    )
+                ),
+                Expanded(
+                    child:
+                    FlatButton(
+                      shape: ContinuousRectangleBorder(),
+                      child: widget.showLabels ? Center(
+                        child: evaluations == null ? null : Text(
+                                    evaluations[-2]
+                        ),
+                      ) : null,
+                      color: Evaluation.getColor(-2),
+                      onPressed: () { widget.onPressed(-2); },
+                    )
+                ),
+                Expanded(
+                    child:
+                    FlatButton(
+                      shape: ContinuousRectangleBorder(),
+                      child: widget.showLabels ? Center(
+                        child: evaluations == null ? null : Text(
+                                    evaluations[2]
+                        ),
+                      ) : null,
+                      color: Evaluation.getColor(2),
+                      onPressed: () { widget.onPressed(2); },
+                    )
+                ),
+                Expanded(
+                    child:
+                    FlatButton(
+                      shape: ContinuousRectangleBorder(),
+                      child: widget.showLabels ? Center(
+                        child: evaluations == null ? null : Text(
+                                    evaluations[3]
+                        ),
+                      ) : null,
+                      color: Evaluation.getColor(3),
+                      onPressed: () { widget.onPressed(3); },
+                    )
+                ),
+              ],
             ),
-            Expanded(
-                child:
-                FlatButton(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                  child: null,
-                  color: Colors.yellow,
-                  onPressed: () { widget.onPressed(1); },
-                )
+          ),
+        );
+
+        break;
+
+      case BoardType.VERY_SIMPLE:
+
+      case BoardType.SIMPLE:
+
+        return Card(
+          child: Container(
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(3.0)
             ),
-            Expanded(
-                child:
-                FlatButton(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(topRight: Radius.circular(3), bottomRight: Radius.circular(3))),
-                  child: null,
-                  color: Colors.green,
-                  onPressed: () { widget.onPressed(2); },
-                )
-            )
-          ],
-        ),
-      ),
-    );
-  }
+            height: 50.0,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Expanded(
+                    child:
+                    FlatButton(
+                      shape: ContinuousRectangleBorder(),
+                      child: widget.showLabels ? Center(
+                        child: evaluations == null ? null : Text(
+                                    evaluations[-3]
+                        ),
+                      ) : null,
+                      color: Evaluation.getColor(-3),
+                      onPressed: () { widget.onPressed(-3); },
+                    )
+                ),
+                Expanded(
+                    child:
+                    FlatButton(
+                      shape: ContinuousRectangleBorder(),
+                      child: widget.showLabels ? Center(
+                        child: evaluations == null ? null : Text(
+                                    evaluations[3]
+                        ),
+                      ) : null,
+                      color: Evaluation.getColor(3),
+                      onPressed: () { widget.onPressed(3); },
+                    )
+                ),
+              ],
+            ),
+          ),
+        );
+
+        break;
+
+      default:
+        throw ArgumentError();
+
+    }
+  }  
+  
 }

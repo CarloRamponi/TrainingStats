@@ -57,21 +57,31 @@ class HomeScene extends StatelessWidget  {
             builder: (context) => SelectTeam()
           ));
 
-          List<Player> players = await Navigator.push(context, MaterialPageRoute<List<Player>>(
-            builder: (context) => PlayersSelectionScene(team: team)
-          ));
+          if(team != null) {
+            List<Player> players = await Navigator.push(
+                context, MaterialPageRoute<List<Player>>(
+                builder: (context) => PlayersSelectionScene(team: team)
+            ));
 
-          List<TrainingStatsAction.Action> actions = await Navigator.of(context).push(MaterialPageRoute<List<TrainingStatsAction.Action>>(
-            builder: (context) => ActionsSelectionScene()
-          ));
+            if(players != null) {
+              List<TrainingStatsAction.Action> actions = await Navigator.of(
+                  context).push(
+                  MaterialPageRoute<List<TrainingStatsAction.Action>>(
+                      builder: (context) => ActionsSelectionScene()
+                  ));
 
-          Training training = Training(
-            team: team,
-            players: players,
-            actions: actions
-          );
+              if(actions != null) {
+                Training training = Training(
+                    team: team,
+                    players: players,
+                    actions: actions
+                );
 
-          Navigator.of(context).pushNamed("/simple_scout", arguments: training);
+                Navigator.of(context).pushNamed(
+                    "/simple_scout", arguments: training);
+              }
+            }
+          }
 
         }
     ),

@@ -23,33 +23,38 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:training_stats/datatypes/record_data.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:training_stats/datatypes/evaluation.dart';
+import 'package:training_stats/datatypes/record.dart';
 
 class EvaluationHistoryTile extends StatelessWidget {
   
-  final RecordData record;
+  final Record record;
   
   EvaluationHistoryTile({
+    Key key,
     @required this.record
-  });
+  }):super(key: key);
   
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 35,
-      width: 35,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(100),
-          color: record.getEvalColor()
-      ),
-      child: Center(
-        child: Text(
-          record.player.shortName,
-          style: TextStyle(
-              color: Colors.white
+    return Material(
+      shape: CircleBorder(),
+      elevation: 3.0,
+      child: Container(
+          height: 35,
+          width: 35,
+          decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              color: Evaluation.getColor(record.evaluation)
           ),
-        ),
-      )
+          child: Center(
+            child: Text(
+              record.player.shortName,
+              style: Theme.of(context).textTheme.button.copyWith(color: useWhiteForeground(Evaluation.getColor(record.evaluation)) ? Colors.white : Colors.black),
+            ),
+          )
+      ),
     );
   }
   
@@ -74,7 +79,7 @@ class EvaluationHistoryBoardState extends State<EvaluationHistoryBoard> {
   static final Duration _ANIM_DURATION = Duration(milliseconds: 500);
   static final double _PADDING = 5.0;
 
-  List<RecordData> records;
+  List<Record> records;
 
   _AnimationPhase animationPhase;
 
@@ -85,7 +90,7 @@ class EvaluationHistoryBoardState extends State<EvaluationHistoryBoard> {
     super.initState();
   }
 
-  void addRecord(RecordData r) {
+  void addRecord(Record r) {
     records.add(r);
 
     setState(() {

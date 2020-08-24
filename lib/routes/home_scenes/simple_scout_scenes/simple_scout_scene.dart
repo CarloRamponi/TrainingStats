@@ -17,13 +17,19 @@
  */
  
  
+import 'dart:math';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:training_stats/datatypes/record_data.dart';
+import 'package:training_stats/datatypes/board_type.dart';
+import 'package:training_stats/datatypes/evaluation.dart';
+import 'package:training_stats/datatypes/player.dart';
+import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/widgets/evaluation_board.dart';
 import 'package:training_stats/widgets/evaluation_history_board.dart';
 import 'package:training_stats/widgets/grid_segmented_control.dart';
+import 'package:training_stats/datatypes/action.dart' as TSA;
 
 class SimpleScoutScene extends StatefulWidget {
   SimpleScoutScene({Key key, this.training}) : super(key: key);
@@ -39,28 +45,20 @@ class _SimpleScoutSceneState extends State<SimpleScoutScene> {
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<EvaluationHistoryBoardState> evalHistoryKey = GlobalKey<EvaluationHistoryBoardState>();
 
-  List<RecordData> records = [];
-  RecordData currentRecord = RecordData();
+  List<Record> records = [];
+  Record currentRecord = Record();
 
-  bool onPlayerChanged(int index) {
+  bool onPlayerChanged(Player player) {
     setState(() {
-      if(index == null) {
-        currentRecord.player = null;
-      } else {
-        currentRecord.player = widget.training.players[index];
-      }
+      currentRecord.player = player;
     });
     return true;
   }
 
-  bool onActionChanged(int index) {
+  bool onActionChanged(TSA.Action action) {
     if(currentRecord.player != null) {
       setState(() {
-        if(index == null) {
-          currentRecord.action = null;
-        } else {
-          currentRecord.action = widget.training.actions[index];
-        }
+        currentRecord.action = action;
       });
       return true;
     } else {
@@ -76,7 +74,7 @@ class _SimpleScoutSceneState extends State<SimpleScoutScene> {
 
       setState(() {
 
-        records.add(RecordData(
+        records.add(Record(
             player: currentRecord.player,
             action: currentRecord.action,
             evaluation: eval
@@ -128,20 +126,28 @@ class _SimpleScoutSceneState extends State<SimpleScoutScene> {
             minimum: EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0),
             child: Column(
               children: <Widget>[
-                GridSegmentedControl(
+                GridSegmentedControl<Player>(
                   title: "Player",
                   rowCount: 6,
-                  widgets: widget.training.players.asMap().map((key, value) => MapEntry<int, String>(key, value.shortName)),
-                  onPressed: (idx) => onPlayerChanged(idx),
+                  elements: widget.training.players.map((value) => GridSegmentedControlElement(value: value, name: value.shortName, color: value.role.color, tooltip: value.name)).toList(),
+                  onPressed: (player) => onPlayerChanged(player),
                 ),
-                GridSegmentedControl(
+                GridSegmentedControl<TSA.Action>(
                   title: "Action",
-                  rowCount: 6,
-                  widgets: widget.training.actions.asMap().map((key, value) => MapEntry<int, String>(key, value.shortName)),
-                  onPressed: (idx) => onActionChanged(idx),
+                  rowCount: max(min(6, widget.training.actions.length), 4),
+                  elements: widget.training.actions.map((value) => GridSegmentedControlElement(value: value, name: value.shortName, color: value.color, tooltip: value.name)).toList(),
+                  onPressed: onActionChanged,
                 ),
-                EvaluationBoard(
-                  onPressed: (eval) => onEvaluationChanged(eval),
+                FutureBuilder(
+                  future: BoardTypeProvider.get(),
+                  builder: (context, AsyncSnapshot<BoardType> boardType) => FutureBuilder(
+                    future: BoardTypeProvider.showLabels(),
+                    builder: (_, AsyncSnapshot<bool> showLabels) => boardType.hasData ? EvaluationBoard(
+                      boardType: boardType.data,
+                      showLabels: showLabels.hasData ? showLabels.data : false,
+                      onPressed: onEvaluationChanged,
+                    ) : LinearProgressIndicator(),
+                  ),
                 ),
               ],
             ),

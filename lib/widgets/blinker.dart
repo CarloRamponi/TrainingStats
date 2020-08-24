@@ -5,10 +5,11 @@ import 'package:flutter/cupertino.dart';
 class Blinker extends StatefulWidget {
 
   Blinker({
+    Key key,
     this.child,
     this.interval = const Duration(milliseconds: 500),
     this.animation = const Duration(milliseconds: 100)
-  });
+  }):super(key: key);
 
   final Widget child;
   final Duration interval;

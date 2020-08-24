@@ -42,9 +42,9 @@ class SettingsScene extends StatelessWidget {
       route: "roles"
     ),
     SettingsPageInfo(
-        title: "Evaluations",
-        subtitle: "Change the evaluations label",
-        icon: Icons.grade,
+        title: "Evaluation board",
+        subtitle: "Customize the evaluation board.",
+        icon: Icons.dashboard,
         route: "evaluations"
     ),
     SettingsPageInfo(

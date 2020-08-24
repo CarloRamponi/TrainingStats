@@ -25,22 +25,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Evaluation {
-  int value;
-  String name;
-
-  Evaluation({this.value, this.name});
-
-  static Evaluation fromMap(Map<String, dynamic> m) {
-    return Evaluation(value: m['value'], name: m['name']);
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'value': this.value,
-      'name': this.name
-    };
-  }
-
   static Color getColor(int value) {
     switch(value) {
       case -3:
@@ -59,49 +43,49 @@ class Evaluation {
         return Colors.brown;
     }
   }
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || other is Evaluation && runtimeType == other.runtimeType && value == other.value;
-
-  @override
-  int get hashCode => value;
 }
 
 class EvaluationProvider {
 
-  static List<Evaluation> _default() {
-    return [
-      Evaluation(value: -3, name: "="),
-      Evaluation(value: -2, name: "-"),
-      Evaluation(value: -1, name: "/"),
-      Evaluation(value: 1, name: "!"),
-      Evaluation(value: 2, name: "+"),
-      Evaluation(value: 3, name: "#")
-    ];
-  }
+  static Map<int, String> _current;
 
-  static Future<List<Evaluation>> getAll() async {
+  static Map<int, String> _default() => {
+    3: "#",
+    2: "+",
+    1: "!",
+    -1: "/",
+    -2: "-",
+    -3: "="
+  };
 
-    String json = (await SharedPreferences.getInstance()).getString('Evaluations');
+  static Future<Map<int, String>> getAll() async {
 
-    if(json != null) {
-      try {
-        List<dynamic> maps = jsonDecode(json);
-        return maps.map((e) => Evaluation.fromMap(e)).toList();
-      } catch (e) {
-        return _default();
+    if(_current == null) {
+
+      String json = (await SharedPreferences.getInstance()).getString('Evaluations');
+
+      if(json != null) {
+        try {
+          Map<String, dynamic> maps = jsonDecode(json);
+          _current = maps.map((key, value) => MapEntry<int, String>(int.parse(key), value.toString()));
+        } catch (e) {
+          _current = _default();
+        }
+      } else {
+        _current = _default();
       }
-    } else {
-      return _default();
     }
+
+    return _current;
+
   }
 
-  static Future<bool> update(Evaluation eval) async {
+  static Future<bool> update(int value, String name) async {
 
-    List<Evaluation> all = await getAll();
-    all[all.indexWhere((element) => element.value == eval.value)].name = eval.name;
+    Map<int, String> all = await getAll();
+    all[value] = name;
 
-    String json = jsonEncode(all.map((e) => e.toMap()).toList());
+    String json = jsonEncode(all.map((key, value) => MapEntry<String, String>(key.toString(), value)));
     return await (await SharedPreferences.getInstance()).setString('Evaluations', json);
 
   }

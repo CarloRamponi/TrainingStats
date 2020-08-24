@@ -20,8 +20,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:training_stats/datatypes/board_type.dart';
 import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/role.dart';
+import 'package:training_stats/routes/settings_pages/evaluations_names_scene.dart';
+import 'package:training_stats/widgets/evaluation_board.dart';
 
 class EvaluationsScene extends StatefulWidget {
 
@@ -32,142 +35,114 @@ class EvaluationsScene extends StatefulWidget {
 
 class _EvaluationsSceneState extends State<EvaluationsScene> {
 
-  Future<List<Evaluation>> evaluations;
-
-  bool _editing;
-  Evaluation _editingItem;
-  GlobalKey<FormState> _editingFormKey = GlobalKey();
+  BoardType boardType;
+  bool showLabels;
+  GlobalKey<EvaluationBoardState> _boardState = GlobalKey();
 
   @override
   void initState() {
-    _editing = false;
-    _refresh();
+
+    BoardTypeProvider.get().then((value) {
+      setState(() {
+        boardType = value;
+      });
+    });
+
+    BoardTypeProvider.showLabels().then((value) {
+      setState(() {
+        showLabels = value;
+      });
+    });
+
     super.initState();
+  }
+
+  void _refreshLabels() {
+    _boardState.currentState.refreshLabels();
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        if(_editing) {
-         setState(() {
-           _editing = false;
-         });
-          return false;
-        }
-
-
-        return true;
-      },
-      child: Scaffold(
-          appBar: AppBar(
-            title: Text('Evaluations'),
-          ),
-          body: FutureBuilder(
-            future: evaluations,
-            builder: (context, AsyncSnapshot<List<Evaluation>> evalSnap) {
-              if(evalSnap.hasData) {
-                return ListView.separated(
-                    itemBuilder: (context, index) {
-
-                      Evaluation eval = evalSnap.data[index];
-
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Evaluation.getColor(eval.value),
-                          child: Center(
-                            child: Text(
-                              eval.value.toString(),
-                              style: Theme.of(context).textTheme.button.copyWith(color: useWhiteForeground(Evaluation.getColor(eval.value)) ? Colors.white : Colors.black),
-                            ),
-                          ),
-                        ),
-                        title: (_editing && _editingItem == eval) ? Form(
-                          key: _editingFormKey,
-                          child: TextFormField(
-                            initialValue: eval.name,
-                            autofocus: true,
-                            onChanged: (value) {
-                              _editingItem.name = value;
-                            },
-                            onEditingComplete: () {
-                              _editingComplete();
-                            },
-                            maxLength: 2,
-                            decoration: InputDecoration(
-                                counterText: ""
-                            ),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return "Enter some text";
-                              } else {
-                                return null;
-                              }
-                            },
-                          ),
-                        ) : GestureDetector(
-                          child: Text(eval.name),
-                          onTap: () { _editEvalName(eval); },
-                        ),
-                        trailing: (_editing && _editingItem == eval) ? IconButton(
-                          icon: Icon(
-                            Icons.check,
-                            color: Colors.green,
-                          ),
-                          onPressed: () {
-                            _editingComplete();
-                          },
-                        ) : IconButton(
-                          icon: Icon(
-                            Icons.edit,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () {
-                            _editEvalName(eval);
-                          },
-                        )
-                      );
-                    },
-                    separatorBuilder: (_, __) => Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Divider(),
-                    ),
-                    itemCount: evalSnap.data.length
-                );
-              } else {
-                return Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-            },
-          )
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Evaluation board'),
       ),
+      body: Column(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.dashboard),
+                    title: Text("Board type"),
+                    trailing: DropdownButton<BoardType>(
+                      value: boardType ?? BoardType.COMPLETE,
+                      icon: Icon(Icons.arrow_downward),
+                      iconSize: 24,
+                      onChanged: (BoardType newValue) {
+                        setState(() {
+                          boardType = newValue;
+                        });
+                        BoardTypeProvider.set(boardType);
+                      },
+                      items: BoardType.values.map<DropdownMenuItem<BoardType>>((BoardType type) {
+                        return DropdownMenuItem<BoardType>(
+                            value: type,
+                            child: Text(BoardTypeProvider.getName(type))
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  SwitchListTile(
+                    secondary: Icon(Icons.text_fields),
+                    title: Text("Show labels"),
+                    onChanged: (value) {
+                      setState(() {
+                        showLabels = value;
+                      });
+                      BoardTypeProvider.setShowLabels(showLabels);
+                    },
+                    value: showLabels ?? true,
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.edit_attributes),
+                    title: Text("Edit evaluation labels"),
+                    enabled: showLabels ?? true,
+                    onTap: () async {
+                      await Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => EvaluationsNamesScene()
+                      ));
+                      _refreshLabels();
+                    },
+                  )
+                ],
+              ),
+            ),
+          ),
+          Center(
+              child: Text("Preview"),
+          ),
+          Container(
+            padding: EdgeInsets.all(20.0),
+            child: Builder(
+              builder: (context) => boardType != null && showLabels != null ? EvaluationBoard(
+                key: _boardState,
+                boardType: boardType,
+                showLabels: showLabels,
+                onPressed: (_) => true,
+              ) : Container(
+                height: 50.0,
+                child: Center(
+                  child: LinearProgressIndicator(),
+                ),
+              ),
+            ),
+          )
+        ],
+      )
     );
-  }
-
-  void _refresh() {
-    setState(() {
-      evaluations = EvaluationProvider.getAll();
-    });
-  }
-
-  void _editEvalName(Evaluation e) {
-    if(!_editing) {
-      setState(() {
-        _editing = true;
-        _editingItem = e;
-      });
-    }
-  }
-
-  void _editingComplete() async {
-    if(_editingFormKey.currentState.validate()) {
-      await EvaluationProvider.update(_editingItem);
-      setState(() {
-        _editing = false;
-        _refresh();
-      });
-    }
   }
 
 }
