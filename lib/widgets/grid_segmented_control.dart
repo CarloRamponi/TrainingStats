@@ -44,52 +44,21 @@ class GridSegmentedControl<T> extends StatefulWidget {
       @required this.title,
       @required this.elements,
       @required this.onPressed,
+      @required this.selected,
       this.rowCount = 4})
       : super(key: key);
 
   final String title;
   final List<GridSegmentedControlElement<T>> elements;
   final int rowCount;
-  final bool Function(T) onPressed;
+  final void Function(T) onPressed;
+  final T selected;
 
   @override
   _GridSegmentedControlState<T> createState() => _GridSegmentedControlState<T>();
 }
 
 class _GridSegmentedControlState<T> extends State<GridSegmentedControl<T>> {
-  T selectedItem;
-  T currentTappedItem;
-
-  //callback onPressed should return true if the user can select this item, false otherwise
-  void onTap(T item) {
-
-    if(item == selectedItem) {
-      widget.onPressed(null);
-      setState(() {
-        selectedItem = null;
-      });
-    } else if(widget.onPressed(item)) {
-      setState(() {
-        selectedItem = item;
-      });
-    } else {
-      setState(() {
-        selectedItem = null;
-      });
-    }
-  }
-
-  void onTapDown(T item) {
-    setState(() {
-      currentTappedItem = item;
-    });
-  }
-
-  void onTapUp() {
-    setState(() {
-      currentTappedItem = null;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,55 +75,58 @@ class _GridSegmentedControlState<T> extends State<GridSegmentedControl<T>> {
                       style: Theme.of(context).textTheme.caption,
                     ),
                   ),
-                  LayoutBuilder(
-                    builder: (context, BoxConstraints constraints) {
+                  Padding(
+                    padding: EdgeInsets.all(5.0),
+                    child: LayoutBuilder(
+                      builder: (context, BoxConstraints constraints) {
 
-                      double size = constraints.maxWidth / widget.rowCount;
-                      int rows = (widget.elements.length / widget.rowCount).ceil();
+                        double size = constraints.maxWidth / widget.rowCount;
+                        int rows = (widget.elements.length / widget.rowCount).ceil();
 
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: List.generate(rows, (index) {
-                          Iterable<GridSegmentedControlElement<T>> chunk = widget.elements.getRange(index*widget.rowCount, min((index+1)*widget.rowCount, widget.elements.length));
-                          return Row(
-                            children: chunk.map((element) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: List.generate(rows, (index) {
+                            Iterable<GridSegmentedControlElement<T>> chunk = widget.elements.getRange(index*widget.rowCount, min((index+1)*widget.rowCount, widget.elements.length));
+                            return Row(
+                              children: chunk.map((element) {
 
-                              Color bgColor = selectedItem == element.value || currentTappedItem == element.value ? Theme.of(context).primaryColor : element.color.withOpacity(0.5);
+                                Color bgColor = widget.selected == element.value ? Theme.of(context).primaryColor : element.color.withOpacity(0.5);
 
-                              return Container(
-                                width: size,
-                                height: size,
-                                padding: EdgeInsets.all(5.0),
-                                child: Tooltip(
-                                  message: element.tooltip,
-                                  child: RaisedButton(
-                                    shape: selectedItem == element.value ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)): CircleBorder(),
-                                    clipBehavior: Clip.hardEdge,
-                                    padding: EdgeInsets.zero,
-                                    child: AnimatedContainer(
-                                      duration: Duration(milliseconds: 200),
-                                      curve: Curves.easeIn,
-                                      color:  bgColor,
-                                      child: Center(
-                                        child: Text(
-                                          element.name,
-                                          style: TextStyle(
-                                              color: useWhiteForeground(bgColor) ? Colors.white : Colors.black
+                                return Container(
+                                  width: size,
+                                  height: size,
+                                  padding: widget.selected == element.value ? EdgeInsets.zero : EdgeInsets.all(5.0),
+                                  child: Tooltip(
+                                    message: element.tooltip,
+                                    child: RaisedButton(
+                                      shape: widget.selected == element.value ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)): CircleBorder(),
+                                      clipBehavior: Clip.hardEdge,
+                                      padding: EdgeInsets.zero,
+                                      child: AnimatedContainer(
+                                        duration: Duration(milliseconds: 200),
+                                        curve: Curves.easeIn,
+                                        color:  bgColor,
+                                        child: Center(
+                                          child: Text(
+                                            element.name,
+                                            style: TextStyle(
+                                                color: useWhiteForeground(bgColor) ? Colors.white : Colors.black
+                                            ),
                                           ),
                                         ),
                                       ),
+                                      onPressed: () => widget.onPressed(element.value),
                                     ),
-                                    onPressed: () => onTap(element.value),
                                   ),
-                                ),
-                              );
-                            }).toList(),
-                          );
-                        }),
-                      );
+                                );
+                              }).toList(),
+                            );
+                          }),
+                        );
 
-                    },
-                  ),
+                      },
+                    ),
+                  )
                 ]
             )
         )

@@ -17,12 +17,12 @@
  */
  
  
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:training_stats/datatypes/board_type.dart';
-import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
@@ -48,24 +48,50 @@ class _SimpleScoutSceneState extends State<SimpleScoutScene> {
   List<Record> records = [];
   Record currentRecord = Record();
 
-  bool onPlayerChanged(Player player) {
-    setState(() {
-      currentRecord.player = player;
+  Duration timer;
+  Timer _timerObj;
+
+  @override
+  void initState() {
+    timer = Duration.zero;
+
+    _timerObj = Timer.periodic(Duration(seconds: 1), (_) {
+      setState(() {
+        timer += Duration(seconds: 1);
+      });
     });
-    return true;
+
+    super.initState();
   }
 
-  bool onActionChanged(TSA.Action action) {
-    if(currentRecord.player != null) {
-      setState(() {
+  @override
+  void dispose() {
+
+    _timerObj.cancel();
+
+    super.dispose();
+  }
+
+  void _stop() {
+    //TODO save training data and move to next page
+  }
+
+  void onPlayerChanged(Player player) {
+    setState(() {
+      if(player == currentRecord.player)
+        currentRecord.player = null;
+      else
+        currentRecord.player = player;
+    });
+  }
+
+  void onActionChanged(TSA.Action action) {
+    setState(() {
+      if(action == currentRecord.action)
+        currentRecord.action = null;
+      else
         currentRecord.action = action;
-      });
-      return true;
-    } else {
-      scaffoldKey.currentState.removeCurrentSnackBar();
-      scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("You should select the player first."), duration: Duration(seconds: 1)));
-      return false;
-    }
+    });
   }
 
   bool onEvaluationChanged(int eval) {
@@ -103,75 +129,163 @@ class _SimpleScoutSceneState extends State<SimpleScoutScene> {
     });
   }
 
+  Future<bool> _confirmExit() async {
+    var result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Confirm exit"),
+          content: Text("Are you sure you want to exit?\nThis training will be discarded and you won't be able to recover it."),
+          actions: [
+            FlatButton(
+              child: Text("No"),
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+            ),
+            FlatButton(
+              child: Text("Yes"),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            )
+          ],
+        ));
+
+    return result == true;
+  }
+
+  Future<bool> _confirmStop() async {
+    var result = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Confirm stop"),
+          content: Text("Are you sure you want to stop this training?"),
+          actions: [
+            FlatButton(
+              child: Text("No"),
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+            ),
+            FlatButton(
+              child: Text("Yes"),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            )
+          ],
+        ));
+
+    return result == true;
+  }
+
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
-      key: scaffoldKey,
-      appBar: AppBar(
-        title: Text("Simple scout"),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.stop),
-            tooltip: "Stop the current training session",
-            onPressed: () {
-              scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Not yet implemented"), duration: Duration(milliseconds: 700)));
-            },
-          )
-        ],
-      ),
-      body: Stack(
-        children: <Widget>[
-          SafeArea(
-            minimum: EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0),
-            child: Column(
-              children: <Widget>[
-                GridSegmentedControl<Player>(
-                  title: "Player",
-                  rowCount: 6,
-                  elements: widget.training.players.map((value) => GridSegmentedControlElement(value: value, name: value.shortName, color: value.role.color, tooltip: value.name)).toList(),
-                  onPressed: (player) => onPlayerChanged(player),
+    return WillPopScope(
+      onWillPop: _confirmExit,
+      child: Scaffold(
+          key: scaffoldKey,
+          body: Stack(
+            children: <Widget>[
+              SafeArea(
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      height: 60.0,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        alignment: Alignment.center,
+                        children: [
+                          Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "Simple Scout",
+                                  style: Theme.of(context).textTheme.headline5,
+                                ),
+                                Text(
+                                  "${timer.inMinutes.toString().padLeft(2, '0')}:${(timer.inSeconds % 60).toString().padLeft(2, '0')}",
+                                  style: Theme.of(context).textTheme.caption,
+                                )
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            right: 0.0,
+                            child: FlatButton(
+                              padding: EdgeInsets.zero,
+                              child: Text("Stop"),
+                              onPressed: () async {
+                                if(await _confirmStop()) {
+                                  _stop();
+                                }
+                              },
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    Divider(
+                      height: 0.0,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0),
+                      child: Column(
+                        children: [
+                          GridSegmentedControl<Player>(
+                            title: "Player",
+                            rowCount: 6,
+                            elements: widget.training.players.map((value) => GridSegmentedControlElement(value: value, name: value.shortName, color: value.role.color, tooltip: value.name)).toList(),
+                            onPressed: (player) => onPlayerChanged(player),
+                            selected: currentRecord.player,
+                          ),
+                          GridSegmentedControl<TSA.Action>(
+                            title: "Action",
+                            rowCount: max(min(6, widget.training.actions.length), 4),
+                            elements: widget.training.actions.map((value) => GridSegmentedControlElement(value: value, name: value.shortName, color: value.color, tooltip: value.name)).toList(),
+                            onPressed: onActionChanged,
+                            selected: currentRecord.action,
+                          ),
+                          FutureBuilder(
+                            future: BoardTypeProvider.get(),
+                            builder: (context, AsyncSnapshot<BoardType> boardType) => FutureBuilder(
+                              future: BoardTypeProvider.showLabels(),
+                              builder: (_, AsyncSnapshot<bool> showLabels) => boardType.hasData ? EvaluationBoard(
+                                boardType: boardType.data,
+                                showLabels: showLabels.hasData ? showLabels.data : false,
+                                onPressed: onEvaluationChanged,
+                              ) : LinearProgressIndicator(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
                 ),
-                GridSegmentedControl<TSA.Action>(
-                  title: "Action",
-                  rowCount: max(min(6, widget.training.actions.length), 4),
-                  elements: widget.training.actions.map((value) => GridSegmentedControlElement(value: value, name: value.shortName, color: value.color, tooltip: value.name)).toList(),
-                  onPressed: onActionChanged,
-                ),
-                FutureBuilder(
-                  future: BoardTypeProvider.get(),
-                  builder: (context, AsyncSnapshot<BoardType> boardType) => FutureBuilder(
-                    future: BoardTypeProvider.showLabels(),
-                    builder: (_, AsyncSnapshot<bool> showLabels) => boardType.hasData ? EvaluationBoard(
-                      boardType: boardType.data,
-                      showLabels: showLabels.hasData ? showLabels.data : false,
-                      onPressed: onEvaluationChanged,
-                    ) : LinearProgressIndicator(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: EvaluationHistoryBoard(
-              key: evalHistoryKey,
-            ),
-          ),
-          Positioned(
-            bottom: 5.0,
-            right: 8.0,
-            child: IconButton(
-              icon: Icon(
-                Icons.backspace,
-                color: Colors.grey,
-                size: 25.0,
               ),
-              onPressed: undoBtnEnabled() ? () { undo(); } : null,
-            ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: EvaluationHistoryBoard(
+                  key: evalHistoryKey,
+                ),
+              ),
+              Positioned(
+                bottom: 5.0,
+                right: 8.0,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.backspace,
+                    color: Colors.grey,
+                    size: 25.0,
+                  ),
+                  onPressed: undoBtnEnabled() ? () { undo(); } : null,
+                ),
+              )
+            ],
           )
-        ],
-      )
+      ),
     );
   }
 }

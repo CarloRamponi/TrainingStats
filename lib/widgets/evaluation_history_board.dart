@@ -169,22 +169,30 @@ class EvaluationHistoryBoardState extends State<EvaluationHistoryBoard> {
     return Container(
         height: 60,
         width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(width: 1, color: Colors.grey)),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: <Widget>[
-            Positioned(
-              top: -12,
-              child: Icon(
-                Icons.arrow_drop_down,
-                size: 30,
-                color: Colors.grey,
-              ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Divider(
+              height: 0.0,
             ),
-          ] + widgets,
-        ),
+            Expanded(
+              child: Stack(
+                alignment: Alignment.center,
+                fit: StackFit.expand,
+                children: <Widget>[
+                  Positioned(
+                    top: -10,
+                    child: Icon(
+                      Icons.arrow_drop_down,
+                      size: 30,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ] + widgets,
+              ),
+            )
+          ],
+        )
       );
   }
 }
