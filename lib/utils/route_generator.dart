@@ -23,7 +23,9 @@ import 'package:flutter/services.dart';
 import 'package:training_stats/routes/home_scenes/home_scene.dart';
 import 'package:training_stats/routes/home_scenes/score_keeper_scenes/score_keeper_config_scene.dart';
 import 'package:training_stats/routes/home_scenes/score_keeper_scenes/score_keeper_scene.dart';
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/simple_scout_report_scene.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/simple_scout_scene.dart';
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/trainings_scene.dart';
 import 'package:training_stats/routes/players_scenes/create_player_scene.dart';
 import 'package:training_stats/routes/settings_pages/about_scene.dart';
 import 'package:training_stats/routes/settings_pages/actions_scene.dart';
@@ -134,12 +136,34 @@ class RouteGenerator {
 
       case '/simple_scout':
 
+        return MaterialPageRoute(
+            builder: (_) {
+              return SimpleScoutTrainingsScene();
+            }
+        );
+
+        break;
+
+      case '/simple_scout/scout':
+
           return MaterialPageRoute(
           builder: (_) {
             return SimpleScoutScene(
               training: args
             );
           }
+        );
+
+        break;
+
+      case '/simple_scout/report':
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return SimpleScoutReportScene(
+                  training: args
+              );
+            }
         );
 
         break;

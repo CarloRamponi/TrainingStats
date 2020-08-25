@@ -22,15 +22,47 @@ import 'package:training_stats/datatypes/player.dart';
 
 class Record {
 
-  Record({this.player, this.action, this.evaluation, this.timestamp}) {
+  int id;
+  Player player;
+  TrainingStatsAction.Action action;
+  int evaluation;
+  DateTime timestamp;
+
+  Record({
+    this.id,
+    this.player,
+    this.action,
+    this.evaluation,
+    this.timestamp
+  }) {
     if(this.timestamp == null) {
       this.timestamp = DateTime.now();
     }
   }
 
-  Player player;
-  TrainingStatsAction.Action action;
-  int evaluation;
-  DateTime timestamp;
+  static Future<Record> fromMap(Map<String, dynamic> m) async {
+    return Record(
+        id: m['id'],
+        player: await PlayerProvider.get(m['player']),
+        timestamp: DateTime.parse(m['ts']),
+        action: await TrainingStatsAction.ActionProvider.get(m['action']),
+        evaluation: m['evaluation']
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    Map<String, dynamic> ret = {
+      'player': this.player.id,
+      'ts': this.timestamp.toIso8601String(),
+      'action': this.action.id,
+      'evaluation' : this.evaluation
+    };
+
+    if (id != null) {
+      ret['id'] = this.id;
+    }
+
+    return ret;
+  }
 
 }

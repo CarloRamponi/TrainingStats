@@ -102,6 +102,78 @@ class DB {
           `color` INTEGER NULL)
       ''');
 
+    await db.execute('''
+        CREATE TABLE `Training` (
+          `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+          `ts_start` TIMESTAMP NOT NULL,
+          `ts_end` TIMESTAMP NOT NULL,
+          `team` INTEGER NOT NULL,
+          CONSTRAINT `fk_Training_1`
+            FOREIGN KEY (`team`)
+            REFERENCES `Team` (`id`)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE)
+    ''');
+
+    await db.execute('''
+        CREATE TABLE `PlayerTraining` (
+          `player` INTEGER,
+          `training` INTEGER,
+          PRIMARY KEY (`player`, `training`),
+          CONSTRAINT `fk_PlayerTraining_1`
+            FOREIGN KEY (`player`)
+            REFERENCES `Player` (`id`)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+          CONSTRAINT `fk_PlayerTraining_2`
+            FOREIGN KEY (`training`)
+            REFERENCES `Training` (`id`)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE)
+    ''');
+
+    await db.execute('''
+        CREATE TABLE `Record` (
+          `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+          `ts` TIMESTAMP NOT NULL,
+          `player` INTEGER NOT NULL,
+          `action` INTEGER NOT NULL,
+          `training` INTEGER NOT NULL,
+          `evaluation` INTEGER NOT NULL,
+          CONSTRAINT `fk_Record_1`
+            FOREIGN KEY (`action`)
+            REFERENCES `Action` (`id`)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+          CONSTRAINT `fk_Record_2`
+            FOREIGN KEY (`player`)
+            REFERENCES `Player` (`id`)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+          CONSTRAINT `fk_Record_3`
+            FOREIGN KEY (`training`)
+            REFERENCES `Training` (`id`)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE)
+    ''');
+
+    await db.execute('''
+      CREATE TABLE `ActionTraining` (
+        `action` INTEGER NOT NULL,
+        `training` INTEGER NOT NULL,
+        PRIMARY KEY (`action`, `training`),
+        CONSTRAINT `fk_ActionTraining_1`
+          FOREIGN KEY (`action`)
+          REFERENCES `Action` (`id`)
+          ON DELETE CASCADE
+          ON UPDATE CASCADE,
+        CONSTRAINT `fk_ActionTraining_2`
+          FOREIGN KEY (`training`)
+          REFERENCES `Training` (`id`)
+          ON DELETE CASCADE
+          ON UPDATE CASCADE)
+    ''');
+
   }
 
   Future<void> _insertDefaults(Database db, int version) async {
@@ -157,7 +229,11 @@ class DB {
       "Player" : (await db.query('Player')).map((e) => Map.from(e)..remove("photo")).toList(),
       "Team" : await db.query('Team'),
       "PlayerTeam" : await db.query('PlayerTeam'),
-      "Action" : await db.query('Action')
+      "Action" : await db.query('Action'),
+      "Training" : await db.query('Training'),
+      "PlayerTraining" : await db.query('PlayerTraining'),
+      "Record" : await db.query('Record'),
+      "ActionTraining" : await db.query('ActionTraining'),
     };
 
     String exportJson = jsonEncode(export);

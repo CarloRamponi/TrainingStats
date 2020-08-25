@@ -72,8 +72,16 @@ class _SimpleScoutSceneState extends State<SimpleScoutScene> {
     super.dispose();
   }
 
-  void _stop() {
-    //TODO save training data and move to next page
+  void _stop() async {
+
+    Training training = widget.training;
+    training.ts_end = DateTime.now();
+    training.records = records;
+
+    training = await TrainingProvider.create(training);
+
+    Navigator.pushReplacementNamed(context, '/simple_scout/report', arguments: training);
+
   }
 
   void onPlayerChanged(Player player) {

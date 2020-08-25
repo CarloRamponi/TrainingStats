@@ -52,63 +52,8 @@ class HomeScene extends StatelessWidget  {
         title: "Classic scout",
         description: "The classical scouting, in which you record all the ball touches.",
         onTap: (context) async {
-
-          Team team = await Navigator.push(context, MaterialPageRoute<Team>(
-            builder: (context) => SelectTeam()
-          ));
-
-          if(team != null) {
-            List<Player> players = await Navigator.push(
-                context, MaterialPageRoute<List<Player>>(
-                builder: (context) => PlayersSelectionScene(team: team)
-            ));
-
-            if(players != null) {
-              List<TrainingStatsAction.Action> actions = await Navigator.of(
-                  context).push(
-                  MaterialPageRoute<List<TrainingStatsAction.Action>>(
-                      builder: (context) => ActionsSelectionScene()
-                  ));
-
-              if(actions != null) {
-                Training training = Training(
-                    team: team,
-                    players: players,
-                    actions: actions
-                );
-
-                Navigator.of(context).pushNamed(
-                    "/simple_scout", arguments: training);
-              }
-            }
-          }
-
+            Navigator.of(context).pushNamed("/simple_scout");
         }
-    ),
-    FunctionalityDescription(
-        title: "Title",
-        description: "Description",
-        onTap: (context) {}
-    ),
-    FunctionalityDescription(
-        title: "Title",
-        description: "Description",
-        onTap: (context) {}
-    ),
-    FunctionalityDescription(
-        title: "Title",
-        description: "Description",
-        onTap: (context) {}
-    ),
-    FunctionalityDescription(
-        title: "Title",
-        description: "Description",
-        onTap: (context) {}
-    ),
-    FunctionalityDescription(
-        title: "Title",
-        description: "Description",
-        onTap: (context) {}
     ),
     FunctionalityDescription(
         title: "Title",
@@ -124,35 +69,29 @@ class HomeScene extends StatelessWidget  {
 
   Widget _functionalityCard(BuildContext context, FunctionalityDescription f) {
     return Card(
-      child: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.only(top: 5.0, left: 5.0, right: 5.0),
-            child: Text(
-              f.title,
-              style: Theme.of(context).textTheme.headline5,
-              textAlign: TextAlign.left,
+      child: FlatButton(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.0).copyWith(top: 10.0),
+              child: Text(
+                f.title,
+                style: Theme.of(context).textTheme.headline5,
+                textAlign: TextAlign.left,
+              ),
             ),
-          ),
-          Divider(),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 5.0),
-            child: Text(
-              f.description,
-              style: Theme.of(context).textTheme.caption,
-            ),
-          ),
-          Expanded(
-            child: Container(),
-          ),
-          FlatButton(
-            child: Text("START", style: TextStyle(color: Colors.green),),
-            onPressed: () {
-              f.onTap(context);
-            },
-          )
-        ],
-      ),
+            Divider(),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.0).copyWith(bottom: 10.0),
+              child: Text(
+                f.description,
+                style: Theme.of(context).textTheme.caption,
+              ),
+            )
+          ],
+        ),
+        onPressed: () => f.onTap(context),
+      )
     );
   }
 
@@ -163,11 +102,28 @@ class HomeScene extends StatelessWidget  {
         title: Text("Training Stats"),
       ),
       drawer: MyDrawer(),
-      body: GridView.count(
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(5.0),
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        children: functionalities.map<Widget>((f) => _functionalityCard(context, f)).toList()
+        child: Row(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: functionalities.sublist(0, functionalities.length ~/ 2).map<Widget>((f) => _functionalityCard(context, f)).toList(),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: functionalities.sublist(functionalities.length ~/ 2).map<Widget>((f) => _functionalityCard(context, f)).toList(),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

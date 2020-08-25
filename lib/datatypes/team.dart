@@ -64,6 +64,10 @@ class TeamProvider {
     return t;
   }
 
+  static Future<Team> get(int id) async {
+    return Team.fromMap((await (await DB.instance).db.query('Team', where: 'id = ?', whereArgs: [id])).first);
+  }
+
   static Future<List<Team>> getAll() async {
     List<Map<String, dynamic>> teams = await (await DB.instance).db.query('Team', columns: ['id', 'name']);
     return teams.map((m) => Team.fromMap(m)).toList();
@@ -86,12 +90,9 @@ class TeamProvider {
 
   static Future<List<Player>> getPlayers(int teamId) async {
     List<Map<String, dynamic>> maps =  await (await DB.instance).db.query('Player', where: 'id IN (SELECT player FROM PlayerTeam WHERE team = ?)', whereArgs: [teamId], orderBy: "role");
-    List<Player> players =  maps.map((e) => Player.fromMap(e)).toList();
-
-    for(int i = 0; i < players.length; i++) {
-      if(players[i].role != null) {
-        players[i].role = await RoleProvider.get(players[i].role.id);
-      }
+    List<Player> players = [];
+    for(int i = 0; i < maps.length; i++) {
+      players.add(await Player.fromMap(maps[i]));
     }
 
     return players;
@@ -99,12 +100,9 @@ class TeamProvider {
 
   static Future<List<Player>> getPlayersNotInTeam(int teamId, {String query = ""}) async {
     List<Map<String, dynamic>> maps =  await (await DB.instance).db.query('Player', where: 'id NOT IN (SELECT player FROM PlayerTeam WHERE team = ?) AND name LIKE ?', whereArgs: [teamId, "%"+query+"%"], orderBy: "role");
-    List<Player> players =  maps.map((e) => Player.fromMap(e)).toList();
-
-    for(int i = 0; i < players.length; i++) {
-      if(players[i].role != null) {
-        players[i].role = await RoleProvider.get(players[i].role.id);
-      }
+    List<Player> players = [];
+    for(int i = 0; i < maps.length; i++) {
+      players.add(await Player.fromMap(maps[i]));
     }
 
     return players;

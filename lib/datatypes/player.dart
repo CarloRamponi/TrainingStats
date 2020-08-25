@@ -34,13 +34,13 @@ class Player {
 
   Player({this.id, this.name, this.shortName, this.photo, this.role});
 
-  static Player fromMap(Map<String, dynamic> m) {
+  static Future<Player> fromMap(Map<String, dynamic> m) async {
     return Player(
         id: m['id'],
         name: m['name'],
         shortName: m['short_name'],
         photo: m['photo'],
-        role: m['role'] == null ? null : Role(id: m['role'])
+        role: m['role'] == null ? null : await RoleProvider.get(m['role'])
     );
   }
 
@@ -70,6 +70,12 @@ class Player {
 }
 
 class PlayerProvider {
+
+  static Future<Player> get(int id) async {
+    Map<String, dynamic> m = (await (await DB.instance).db.query('Player', where: 'id = ?', whereArgs: [id])).first ?? null;
+    return m == null ? null : Player.fromMap(m);
+  }
+
   static Future<Player> create(Player player) async {
     player.id = await (await DB.instance).db.insert('Player', player.toMap());
     return player;
@@ -77,12 +83,10 @@ class PlayerProvider {
 
   static Future<List<Player>> getAll({query = ""}) async {
     List<Map<String, dynamic>> maps = await (await DB.instance).db.query('Player', orderBy: "role", where: "name LIKE ?", whereArgs: ["%"+query+"%"]);
-    List<Player> players =  maps.map((m) => Player.fromMap(m)).toList();
 
-    for(int i = 0; i < players.length; i++) {
-      if(players[i].role != null) {
-        players[i].role = await RoleProvider.get(players[i].role.id);
-      }
+    List<Player> players = [];
+    for(int i = 0; i < maps.length; i++) {
+      players.add(await Player.fromMap(maps[i]));
     }
 
     return players;
