@@ -53,10 +53,11 @@ class _SimpleScoutTrainingsSceneState extends State<SimpleScoutTrainingsScene> {
     super.initState();
   }
 
-  void _refresh() {
+  Future<void> _refresh() {
     setState(() {
       trainings = TrainingProvider.getAll();
     });
+    return trainings;
   }
 
   Future<bool> _confirmDelete() {
@@ -182,85 +183,89 @@ class _SimpleScoutTrainingsSceneState extends State<SimpleScoutTrainingsScene> {
                   builder: (context, AsyncSnapshot<List<Training>> snap) {
                     if (snap.hasData) {
                       if (snap.data.length > 0) {
-                        return ListView.separated(
-                            itemBuilder: (context, index) {
-                              GlobalKey<PopupMenuButtonState> menuKey =
-                              GlobalKey<PopupMenuButtonState>();
-                              Training current = snap.data[index];
-                              return ListTile(
-                                title: Text(
-                                  DateFormat("d/M/y").format(current.ts_start) + " - " + current.team.teamName,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      current.actions.map((e) => e.name).join(", "),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      current.players.map((e) => e.shortName).join(", "),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Builder(
-                                      builder: (context) {
-                                        Duration difference = current.ts_end.difference(current.ts_start);
-                                        String text = "From ${DateFormat("H:m:s").format(current.ts_start)} to ${DateFormat("H:m:s").format(current.ts_end)} (${difference.inHours}h ${difference.inMinutes}m ${difference.inSeconds}s)";
-                                        return Text(
-                                          text,
-                                          overflow: TextOverflow.ellipsis,
-                                        );
-                                      },
-                                    )
-                                  ],
-                                ),
-                                isThreeLine: true,
-                                trailing: PopupMenuButton<TrainingAction>(
-                                  key: menuKey,
-                                  onSelected: (selectedDropDownItem) =>
-                                      _handleDropDownMenu(
-                                          current, selectedDropDownItem),
-                                  itemBuilder: (_) {
-                                    return <PopupMenuEntry<TrainingAction>>[
-                                      PopupMenuItem<TrainingAction>(
-                                        value: TrainingAction.clone,
-                                        child: Row(
-                                          children: <Widget>[
-                                            Icon(Icons.content_copy),
-                                            Padding(
-                                              padding: EdgeInsets.only(left: 10.0),
-                                              child: Text("Clone"),
-                                            )
-                                          ],
-                                        ),
+                        return RefreshIndicator(
+                          onRefresh: _refresh,
+                          child: ListView.separated(
+                              itemBuilder: (context, index) {
+                                GlobalKey<PopupMenuButtonState> menuKey =
+                                GlobalKey<PopupMenuButtonState>();
+                                Training current = snap.data[index];
+                                return ListTile(
+                                  title: Text(
+                                    DateFormat("d/M/y").format(current.ts_start) + " - " + current.team.teamName,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        current.actions.map((e) => e.name).join(", "),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      PopupMenuItem<TrainingAction>(
-                                        value: TrainingAction.delete,
-                                        child: Row(
-                                          children: <Widget>[
-                                            Icon(Icons.delete),
-                                            Padding(
-                                              padding: EdgeInsets.only(left: 10.0),
-                                              child: Text("Delete"),
-                                            )
-                                          ],
-                                        ),
+                                      Text(
+                                        current.players.map((e) => e.shortName).join(", "),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Builder(
+                                        builder: (context) {
+                                          Duration difference = current.ts_end.difference(current.ts_start);
+                                          String text = "From ${DateFormat("H:m:s").format(current.ts_start)} to ${DateFormat("H:m:s").format(current.ts_end)} (${difference.inHours}h ${difference.inMinutes}m ${difference.inSeconds}s)";
+                                          return Text(
+                                            text,
+                                            overflow: TextOverflow.ellipsis,
+                                          );
+                                        },
                                       )
-                                    ];
+                                    ],
+                                  ),
+                                  isThreeLine: true,
+                                  trailing: PopupMenuButton<TrainingAction>(
+                                    key: menuKey,
+                                    onSelected: (selectedDropDownItem) =>
+                                        _handleDropDownMenu(
+                                            current, selectedDropDownItem),
+                                    itemBuilder: (_) {
+                                      return <PopupMenuEntry<TrainingAction>>[
+                                        PopupMenuItem<TrainingAction>(
+                                          value: TrainingAction.clone,
+                                          child: Row(
+                                            children: <Widget>[
+                                              Icon(Icons.content_copy),
+                                              Padding(
+                                                padding: EdgeInsets.only(left: 10.0),
+                                                child: Text("Clone"),
+                                              )
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem<TrainingAction>(
+                                          value: TrainingAction.delete,
+                                          child: Row(
+                                            children: <Widget>[
+                                              Icon(Icons.delete),
+                                              Padding(
+                                                padding: EdgeInsets.only(left: 10.0),
+                                                child: Text("Delete"),
+                                              )
+                                            ],
+                                          ),
+                                        )
+                                      ];
+                                    },
+                                  ),
+                                  onTap: () => _showReport(current),
+                                  onLongPress: () {
+                                    menuKey.currentState.showButtonMenu();
                                   },
-                                ),
-                                onTap: () => _showReport(current),
-                                onLongPress: () {
-                                  menuKey.currentState.showButtonMenu();
-                                },
-                              );
-                            },
-                            separatorBuilder: (_, __) => Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 10.0),
-                              child: Divider(),
-                            ),
-                            itemCount: snap.data.length);
+                                );
+                              },
+                              separatorBuilder: (_, __) => Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10.0),
+                                child: Divider(),
+                              ),
+                              itemCount: snap.data.length
+                          ),
+                        );
                       } else {
                         return Center(
                           child: Text("Start by creating a new training!"),

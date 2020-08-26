@@ -77,7 +77,7 @@ class Training {
 class TrainingProvider {
 
   static Future<List<Training>> getAll() async {
-    List<Map<String, dynamic>> list = await (await DB.instance).db.query('Training');
+    List<Map<String, dynamic>> list = await (await DB.instance).db.query('Training', orderBy: "ts_start DESC");
     List<Training> trainings = [];
     for(int i = 0; i < list.length; i++) {
       trainings.add(await Training.fromMap(list[i]));

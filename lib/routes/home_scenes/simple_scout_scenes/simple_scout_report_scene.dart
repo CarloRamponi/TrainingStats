@@ -19,6 +19,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:training_stats/datatypes/training.dart';
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/classics.dart';
 
 class SimpleScoutReportScene extends StatefulWidget{
 
@@ -33,20 +34,126 @@ class SimpleScoutReportScene extends StatefulWidget{
 
 }
 
+enum ReportAction {
+  clone,
+  delete,
+  export,
+}
+
 class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
+
+  Future<bool> _confirmDelete() {
+    return showDialog(context: context, builder: (context) => AlertDialog(
+      title: Text("Are you sure?"),
+      content: Text("This action cannot be undone.\nAll data from this training will be lost."),
+      actions: [
+        FlatButton(
+          child: Text("Cancel"),
+          onPressed: () => Navigator.of(context).pop(null),
+        ),
+        FlatButton(
+          child: Text("Delete"),
+          onPressed: () => Navigator.of(context).pop(true),
+        )
+      ],
+    ));
+  }
+
+  void _popUpMenuHandler(ReportAction action) async {
+    switch(action) {
+
+      case ReportAction.clone:
+
+        Training t = Training(
+          team: widget.training.team,
+          players: widget.training.players,
+          actions: widget.training.actions
+        );
+
+        Navigator.of(context).pushReplacementNamed("/simple_scout/scout", arguments: t);
+        break;
+      case ReportAction.delete:
+
+        if(await _confirmDelete()) {
+          await TrainingProvider.delete(widget.training.id);
+          Navigator.of(context).pop();
+        }
+
+        break;
+      case ReportAction.export:
+        // TODO: Handle this case.
+        break;
+    }
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          children: [
-            Text(widget.training.toMap().toString()),
-            Text(widget.training.players.map((e) => e.name).join(", ")),
-            Text(widget.training.actions.map((e) => e.name).join(", ")),
-            Text(widget.training.records.map((e) => e.player.name + " => " + e.action.name + " => " + e.evaluation.toString()).join("\n")),
-          ],
-        ),
+      appBar: AppBar(
+        title: Text("Report"),
+        actions: [
+          PopupMenuButton<ReportAction>(
+            itemBuilder: (context) => [
+              PopupMenuItem<ReportAction>(
+                value: ReportAction.export,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(right: 10.0),
+                      child: Icon(
+                        Icons.exit_to_app,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text("Export")
+                  ],
+                ),
+              ),
+              PopupMenuItem<ReportAction>(
+                value: ReportAction.clone,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(right: 10.0),
+                      child: Icon(
+                        Icons.content_copy,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text("Clone")
+                  ],
+                ),
+              ),
+              PopupMenuItem<ReportAction>(
+                value: ReportAction.delete,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(right: 10.0),
+                      child: Icon(
+                        Icons.delete,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    Text("Delete")
+                  ],
+                ),
+              )
+            ],
+            onSelected: _popUpMenuHandler,
+          )
+        ],
       ),
+      body: ListView(
+        padding: EdgeInsets.symmetric(vertical: 10.0),
+        children: [
+          ClassicCharts(
+            actions: widget.training.actions,
+            players: widget.training.players,
+            records: widget.training.records,
+          )
+        ],
+      )
     );
   }
 

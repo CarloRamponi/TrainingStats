@@ -42,10 +42,11 @@ class _TeamsSceneState extends State<TeamsScene> {
     super.initState();
   }
 
-  void _refresh() {
+  Future<void> _refresh() {
     setState(() {
       teams = TeamProvider.getAll();
     });
+    return teams;
   }
 
   void _handleDropDownMenu(Team team, TeamAction action) async {
@@ -175,84 +176,88 @@ class _TeamsSceneState extends State<TeamsScene> {
           builder: (context, teamSnap) {
             if (teamSnap.hasData) {
               if (teamSnap.data.length > 0) {
-                return ListView.separated(
-                    itemBuilder: (context, index) {
-                      GlobalKey<PopupMenuButtonState> menuKey =
-                          GlobalKey<PopupMenuButtonState>();
-                      Team current = teamSnap.data[index];
-                      return ListTile(
-                        title: Text(current.teamName),
-                        subtitle: FutureBuilder(
-                          builder: (context, playersSnap) {
-                            if (playersSnap.hasData) {
-                              if (playersSnap.data.length > 0) {
-                                return Text(playersSnap.data.map((p) => p.name).toList().join(", "),
-                                    overflow: TextOverflow.ellipsis);
+                return RefreshIndicator(
+                  onRefresh: _refresh,
+                  child: ListView.separated(
+                      itemBuilder: (context, index) {
+                        GlobalKey<PopupMenuButtonState> menuKey =
+                        GlobalKey<PopupMenuButtonState>();
+                        Team current = teamSnap.data[index];
+                        return ListTile(
+                          title: Text(current.teamName),
+                          subtitle: FutureBuilder(
+                            builder: (context, playersSnap) {
+                              if (playersSnap.hasData) {
+                                if (playersSnap.data.length > 0) {
+                                  return Text(playersSnap.data.map((p) => p.name).toList().join(", "),
+                                      overflow: TextOverflow.ellipsis);
+                                } else {
+                                  return Text('No players added yet',
+                                      overflow: TextOverflow.ellipsis);
+                                }
                               } else {
-                                return Text('No players added yet',
-                                    overflow: TextOverflow.ellipsis);
+                                return Container(
+                                  height: 10.0,
+                                  width: double.infinity,
+                                  margin: EdgeInsets.only(
+                                      right: MediaQuery.of(context).size.width / 4.0),
+                                  decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(0.4)),
+                                  child: null,
+                                );
                               }
-                            } else {
-                              return Container(
-                                height: 10.0,
-                                width: double.infinity,
-                                margin: EdgeInsets.only(
-                                    right: MediaQuery.of(context).size.width / 4.0),
-                                decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.4)),
-                                child: null,
-                              );
-                            }
-                          },
-                          future: TeamProvider.getPlayers(current.id),
-                        ),
-                        trailing: PopupMenuButton<TeamAction>(
-                          key: menuKey,
-                          onSelected: (selectedDropDownItem) =>
-                              _handleDropDownMenu(
-                                  current, selectedDropDownItem),
-                          itemBuilder: (_) {
-                            return <PopupMenuEntry<TeamAction>>[
-                              PopupMenuItem<TeamAction>(
-                                value: TeamAction.edit,
-                                child: Row(
-                                  children: <Widget>[
-                                    Icon(Icons.edit),
-                                    Padding(
-                                      padding: EdgeInsets.only(left: 10.0),
-                                      child: Text("Edit"),
-                                    )
-                                  ],
+                            },
+                            future: TeamProvider.getPlayers(current.id),
+                          ),
+                          trailing: PopupMenuButton<TeamAction>(
+                            key: menuKey,
+                            onSelected: (selectedDropDownItem) =>
+                                _handleDropDownMenu(
+                                    current, selectedDropDownItem),
+                            itemBuilder: (_) {
+                              return <PopupMenuEntry<TeamAction>>[
+                                PopupMenuItem<TeamAction>(
+                                  value: TeamAction.edit,
+                                  child: Row(
+                                    children: <Widget>[
+                                      Icon(Icons.edit),
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 10.0),
+                                        child: Text("Edit"),
+                                      )
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              PopupMenuItem<TeamAction>(
-                                value: TeamAction.delete,
-                                child: Row(
-                                  children: <Widget>[
-                                    Icon(Icons.delete),
-                                    Padding(
-                                      padding: EdgeInsets.only(left: 10.0),
-                                      child: Text("Delete"),
-                                    )
-                                  ],
-                                ),
-                              )
-                            ];
+                                PopupMenuItem<TeamAction>(
+                                  value: TeamAction.delete,
+                                  child: Row(
+                                    children: <Widget>[
+                                      Icon(Icons.delete),
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 10.0),
+                                        child: Text("Delete"),
+                                      )
+                                    ],
+                                  ),
+                                )
+                              ];
+                            },
+                          ),
+                          onTap: () async {
+                            _handleDropDownMenu(current, TeamAction.edit);
                           },
-                        ),
-                        onTap: () async {
-                          _handleDropDownMenu(current, TeamAction.edit);
-                        },
-                        onLongPress: () {
-                          menuKey.currentState.showButtonMenu();
-                        },
-                      );
-                    },
-                    separatorBuilder: (_, __) => Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10.0),
-                          child: Divider(),
-                        ),
-                    itemCount: teamSnap.data.length);
+                          onLongPress: () {
+                            menuKey.currentState.showButtonMenu();
+                          },
+                        );
+                      },
+                      separatorBuilder: (_, __) => Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.0),
+                        child: Divider(),
+                      ),
+                      itemCount: teamSnap.data.length
+                  ),
+                );
               } else {
                 return Center(
                   child: Text("Start by creating a team!"),

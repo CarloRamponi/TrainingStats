@@ -48,10 +48,11 @@ class _PlayersSceneState extends State<PlayersScene> {
     super.initState();
   }
 
-  void _refresh() {
+  Future<void> _refresh() {
     setState(() {
       players = PlayerProvider.getAll(query: searchQuery);
     });
+    return players;
   }
 
   void _search() {
@@ -184,77 +185,81 @@ class _PlayersSceneState extends State<PlayersScene> {
                 builder: (context, AsyncSnapshot<List<Player>> playersSnap) {
                   if (playersSnap.hasData) {
                     if (playersSnap.data.length > 0) {
-                      return ListView.separated(
-                          itemBuilder: (context, index) {
-                            GlobalKey<PopupMenuButtonState> menuKey =
-                            GlobalKey<PopupMenuButtonState>();
-                            Player current = playersSnap.data[index];
-                            return ListTile(
-                              leading: current.photo != null
-                                  ? CircleAvatar(
-                                backgroundColor: Colors.transparent,
-                                backgroundImage: FileImage(File(current.photo)),
-                              )
-                                  : CircleAvatar(
+                      return RefreshIndicator(
+                        onRefresh: _refresh,
+                        child: ListView.separated(
+                            itemBuilder: (context, index) {
+                              GlobalKey<PopupMenuButtonState> menuKey =
+                              GlobalKey<PopupMenuButtonState>();
+                              Player current = playersSnap.data[index];
+                              return ListTile(
+                                leading: current.photo != null
+                                    ? CircleAvatar(
                                   backgroundColor: Colors.transparent,
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.account_circle,
-                                      color: Colors.grey,
-                                      size: 40.0,
-                                    ),
-                                  )
-                              ),
-                              title: Text(current.name),
-                              subtitle: Text(current.shortName + (current.role == null ? "" : " - " + current.role.name)),
-                              trailing: PopupMenuButton<PlayerAction>(
-                                key: menuKey,
-                                onSelected: (selectedDropDownItem) =>
-                                    _handleDropDownMenu(
-                                        current, selectedDropDownItem),
-                                itemBuilder: (_) {
-                                  return <PopupMenuEntry<PlayerAction>>[
-                                    PopupMenuItem<PlayerAction>(
-                                      value: PlayerAction.edit,
-                                      child: Row(
-                                        children: <Widget>[
-                                          Icon(Icons.edit),
-                                          Padding(
-                                            padding: EdgeInsets.only(left: 10.0),
-                                            child: Text("Edit"),
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuItem<PlayerAction>(
-                                      value: PlayerAction.delete,
-                                      child: Row(
-                                        children: <Widget>[
-                                          Icon(Icons.delete),
-                                          Padding(
-                                            padding: EdgeInsets.only(left: 10.0),
-                                            child: Text("Delete"),
-                                          )
-                                        ],
+                                  backgroundImage: FileImage(File(current.photo)),
+                                )
+                                    : CircleAvatar(
+                                    backgroundColor: Colors.transparent,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.account_circle,
+                                        color: Colors.grey,
+                                        size: 40.0,
                                       ),
                                     )
-                                  ];
+                                ),
+                                title: Text(current.name),
+                                subtitle: Text(current.shortName + (current.role == null ? "" : " - " + current.role.name)),
+                                trailing: PopupMenuButton<PlayerAction>(
+                                  key: menuKey,
+                                  onSelected: (selectedDropDownItem) =>
+                                      _handleDropDownMenu(
+                                          current, selectedDropDownItem),
+                                  itemBuilder: (_) {
+                                    return <PopupMenuEntry<PlayerAction>>[
+                                      PopupMenuItem<PlayerAction>(
+                                        value: PlayerAction.edit,
+                                        child: Row(
+                                          children: <Widget>[
+                                            Icon(Icons.edit),
+                                            Padding(
+                                              padding: EdgeInsets.only(left: 10.0),
+                                              child: Text("Edit"),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                      PopupMenuItem<PlayerAction>(
+                                        value: PlayerAction.delete,
+                                        child: Row(
+                                          children: <Widget>[
+                                            Icon(Icons.delete),
+                                            Padding(
+                                              padding: EdgeInsets.only(left: 10.0),
+                                              child: Text("Delete"),
+                                            )
+                                          ],
+                                        ),
+                                      )
+                                    ];
+                                  },
+                                ),
+                                onTap: () async {
+                                  await Navigator.of(context).pushNamed('/editPlayer', arguments: current);
+                                  _refresh();
                                 },
-                              ),
-                              onTap: () async {
-                                await Navigator.of(context).pushNamed('/editPlayer', arguments: current);
-                                _refresh();
-                              },
-                              onLongPress: () {
-                                menuKey.currentState.showButtonMenu();
-                              },
-                            );
-                          },
-                          separatorBuilder: (_, __) => Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10.0),
-                            child: Divider(),
-                          ),
-                          itemCount: playersSnap.data.length);
+                                onLongPress: () {
+                                  menuKey.currentState.showButtonMenu();
+                                },
+                              );
+                            },
+                            separatorBuilder: (_, __) => Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 10.0),
+                              child: Divider(),
+                            ),
+                            itemCount: playersSnap.data.length
+                        ),
+                      );
                     } else {
                       return Center(
                         child: Text(searching ? "Nothing here!" : "Start by creating a player!"),
