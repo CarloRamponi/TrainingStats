@@ -20,6 +20,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/classics.dart';
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/touches_average.dart';
 
 class SimpleScoutReportScene extends StatefulWidget{
 
@@ -41,6 +42,14 @@ enum ReportAction {
 }
 
 class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
+
+  Future<bool> loadingRecords;
+
+  @override
+  void initState() {
+    loadingRecords = widget.training.loadRecords();
+    super.initState();
+  }
 
   Future<bool> _confirmDelete() {
     return showDialog(context: context, builder: (context) => AlertDialog(
@@ -144,15 +153,42 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
           )
         ],
       ),
-      body: ListView(
-        padding: EdgeInsets.symmetric(vertical: 10.0),
-        children: [
-          ClassicCharts(
-            actions: widget.training.actions,
-            players: widget.training.players,
-            records: widget.training.records,
-          )
-        ],
+      body: FutureBuilder(
+        future: loadingRecords,
+        builder: (context, snap) => snap.hasData ? snap.data == true ? ListView(
+          padding: EdgeInsets.symmetric(vertical: 10.0),
+          children: [
+            Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Text(
+                "Classical statistics",
+                style: Theme.of(context).textTheme.headline5,
+              ),
+            ),
+            ClassicCharts(
+              actions: widget.training.actions,
+              players: widget.training.players,
+              records: widget.training.records,
+            ),
+            Divider(),
+            Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Text(
+                "Ball touches every N seconds",
+                style: Theme.of(context).textTheme.headline5,
+              ),
+            ),
+            TouchesAverage(
+              actions: widget.training.actions,
+              players: widget.training.players,
+              records: widget.training.records,
+            )
+          ],
+        ) : Center(
+          child: Text("There was an error while loading training records."),
+        ) : Center(
+          child: CircularProgressIndicator(),
+        ),
       )
     );
   }

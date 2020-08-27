@@ -46,16 +46,39 @@ class Training {
     }
   }
 
-  static Future<Training> fromMap(Map<String, dynamic> m) async {
-    return Training(
-        id: m['id'],
-        team: await TeamProvider.get(m['team']),
-        ts_start: DateTime.parse(m['ts_start']),
-        ts_end: DateTime.parse(m['ts_end']),
-        actions: await TrainingProvider.getActions(m['id']),
-        players: await TrainingProvider.getPlayers(m['id']),
-        records: await TrainingProvider.getRecords(m['id'])
-    );
+  static Future<Training> fromMap(Map<String, dynamic> m, {bool loadRecords = false}) async {
+
+    if(loadRecords) {
+      return Training(
+          id: m['id'],
+          team: await TeamProvider.get(m['team']),
+          ts_start: DateTime.parse(m['ts_start']),
+          ts_end: DateTime.parse(m['ts_end']),
+          actions: await TrainingProvider.getActions(m['id']),
+          players: await TrainingProvider.getPlayers(m['id']),
+          records: await TrainingProvider.getRecords(m['id'])
+      );
+    } else {
+      return Training(
+          id: m['id'],
+          team: await TeamProvider.get(m['team']),
+          ts_start: DateTime.parse(m['ts_start']),
+          ts_end: DateTime.parse(m['ts_end']),
+          actions: await TrainingProvider.getActions(m['id']),
+          players: await TrainingProvider.getPlayers(m['id']),
+      );
+    }
+  }
+
+  Future<bool> loadRecords() {
+    if(records == null) {
+      return TrainingProvider.getRecords(this.id).then((value) {
+        this.records = value;
+        return true;
+      }).catchError((e) => false);
+    } else {
+      return Future.value(true);
+    }
   }
 
   Map<String, dynamic> toMap() {
@@ -120,6 +143,7 @@ class TrainingProvider {
   }
 
   static Future<List<Player>> getPlayers(int id) async {
+
     List<Map<String, dynamic>> list = await (await DB.instance).db.query('PlayerTraining', where: "training = ?", whereArgs: [id]);
 
     List<Player> players = [];
@@ -131,6 +155,7 @@ class TrainingProvider {
   }
 
   static Future<List<Action>> getActions(int id) async {
+
     List<Map<String, dynamic>> list = await (await DB.instance).db.query('ActionTraining', where: "training = ?", whereArgs: [id]);
 
     List<Action> actions = [];
@@ -142,7 +167,8 @@ class TrainingProvider {
   }
 
   static Future<List<Record>> getRecords(int id) async {
-    List<Map<String, dynamic>> list = await (await DB.instance).db.query('Record', where: "training = ?", whereArgs: [id]);
+
+    List<Map<String, dynamic>> list = await (await DB.instance).db.query('Record', where: "training = ?", whereArgs: [id], orderBy: 'ts ASC');
 
     List<Record> records = [];
     for(int i = 0; i < list.length; i++) {
