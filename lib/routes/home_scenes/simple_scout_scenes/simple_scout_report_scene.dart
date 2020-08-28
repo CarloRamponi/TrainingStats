@@ -16,11 +16,23 @@
  *
  */
 
+import 'dart:io';
+import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_share/flutter_share.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:random_string/random_string.dart';
+import 'package:training_stats/datatypes/statistics.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/classics.dart';
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exportable_chart_state.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/touches_average.dart';
+import 'package:path/path.dart' as path;
+import 'package:pdf/widgets.dart' as pw;
 
 class SimpleScoutReportScene extends StatefulWidget{
 
@@ -45,9 +57,13 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
 
   Future<bool> loadingRecords;
 
+  Statistics statistics;
+  GlobalKey<ExportableChartState> _classicChart = GlobalKey();
+  GlobalKey<ExportableChartState> _avgChart = GlobalKey();
+
   @override
   void initState() {
-    loadingRecords = widget.training.loadRecords();
+    loadingRecords = widget.training.loadRecords()..then((value) => statistics = Statistics(widget.training));
     super.initState();
   }
 
@@ -90,10 +106,19 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
 
         break;
       case ReportAction.export:
-        // TODO: Handle this case.
+
+        ExportedChart classicChart = await _classicChart.currentState.getImage();
+        ExportedChart avgChart = await _avgChart.currentState.getImage();
+
+        String filePath = path.join((await getTemporaryDirectory()).path, randomString(10, from: 62, to: 86) + ".pdf");
+        File(filePath).writeAsBytesSync((await statistics.generateReport([classicChart, avgChart])).toList());
+
+        FlutterShare.shareFile(title: "Simple scout report.pdf", filePath: filePath);
+
         break;
     }
   }
+
   
   @override
   Widget build(BuildContext context) {
@@ -155,35 +180,36 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
       ),
       body: FutureBuilder(
         future: loadingRecords,
-        builder: (context, snap) => snap.hasData ? snap.data == true ? ListView(
+        builder: (context, snap) => snap.hasData ? snap.data == true ? SingleChildScrollView(
           padding: EdgeInsets.symmetric(vertical: 10.0),
-          children: [
-            Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Text(
-                "Classical statistics",
-                style: Theme.of(context).textTheme.headline5,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Text(
+                  "Classical statistics",
+                  style: Theme.of(context).textTheme.headline5,
+                ),
               ),
-            ),
-            ClassicCharts(
-              actions: widget.training.actions,
-              players: widget.training.players,
-              records: widget.training.records,
-            ),
-            Divider(),
-            Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Text(
-                "Ball touches every N seconds",
-                style: Theme.of(context).textTheme.headline5,
+              ClassicCharts(
+                key: _classicChart,
+                statistics: statistics,
               ),
-            ),
-            TouchesAverage(
-              actions: widget.training.actions,
-              players: widget.training.players,
-              records: widget.training.records,
-            )
-          ],
+              Divider(),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Text(
+                  "Ball touches every N seconds",
+                  style: Theme.of(context).textTheme.headline5,
+                ),
+              ),
+              TouchesAverage(
+                key: _avgChart,
+                statistics: statistics,
+              )
+            ]
+          ),
         ) : Center(
           child: Text("There was an error while loading training records."),
         ) : Center(

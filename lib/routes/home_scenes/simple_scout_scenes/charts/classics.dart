@@ -17,37 +17,24 @@
  */
 
 import 'dart:math';
-
+import 'dart:typed_data';
+import 'dart:ui';
 import 'package:charts_flutter/flutter.dart' as Charts;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:training_stats/datatypes/player.dart';
-import 'package:training_stats/datatypes/record.dart';
-import 'package:training_stats/datatypes/action.dart' as TSA;
+import 'package:training_stats/datatypes/statistics.dart';
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exportable_chart_state.dart';
 
-class Stats {
 
-  double total;
-  Map<TSA.Action, double> perAction;
-
-  Stats({
-    this.total,
-    this.perAction
-  });
-
-}
 
 class ClassicCharts extends StatefulWidget {
 
-  final List<TSA.Action> actions;
-  final List<Player> players;
-  final List<Record> records;
+  final Statistics statistics;
 
   ClassicCharts({
     Key key,
-    this.actions,
-    this.players,
-    this.records
+    this.statistics
   }) : super(key: key);
 
   @override
@@ -55,21 +42,17 @@ class ClassicCharts extends StatefulWidget {
 
 }
 
-class _ClassicChartsState extends State<ClassicCharts> {
+class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
 
   Map<Player, bool> selected;
-
   List<Charts.Series<Player, String>> series;
-  Map<Player, Stats> positivity;
-  Map<Player, Stats> efficiency;
-  Map<Player, Stats> perfection;
-  Map<Player, Stats> touches;
-
   Future<bool> loading;
+
+  GlobalKey _chartKey = GlobalKey();
 
   @override
   void initState() {
-    selected = Map.fromEntries(widget.players.map((e) => MapEntry(e, false)));
+    selected = Map.fromEntries(widget.statistics.training.players.map((e) => MapEntry(e, false)));
     _refresh();
     super.initState();
   }
@@ -78,111 +61,33 @@ class _ClassicChartsState extends State<ClassicCharts> {
     loading = _computeValues();
   }
 
+
   Future<bool> _computeValues() async {
-
-    positivity = Map.fromEntries(
-        widget.players.map<MapEntry<Player, Stats>>(
-                (p) {
-              Iterable<Record> filtered = widget.records.where((element) => element.player == p && widget.actions.contains(element.action));
-
-              Stats s = Stats(
-                  total: filtered.isEmpty ? 0.0 : (filtered.where((element) => element.evaluation > 0).length / filtered.length) * 100,
-                  perAction: Map.fromEntries(widget.actions.map<MapEntry<TSA.Action, double>>((action) {
-                    Iterable<Record> aa = filtered.where((element) => element.action == action);
-                    return MapEntry(
-                        action,
-                        aa.isEmpty ? 0.0 : (aa.where((element) => element.evaluation > 0).length / aa.length) * 100
-                    );
-                  }))
-              );
-
-              return MapEntry(p, s);
-            }
-        )
-    );
-
-    efficiency = Map.fromEntries(
-        widget.players.map<MapEntry<Player, Stats>>(
-                (p) {
-              Iterable<Record> filtered = widget.records.where((element) => element.player == p && widget.actions.contains(element.action));
-
-              Stats s = Stats(
-                  total: filtered.isEmpty ? 0.0 : ((filtered.where((element) => element.evaluation == 3).length - filtered.where((element) => element.evaluation == -3).length) / filtered.length) * 100,
-                  perAction: Map.fromEntries(widget.actions.map<MapEntry<TSA.Action, double>>((action) {
-                    Iterable<Record> aa = filtered.where((element) => element.action == action);
-                    return MapEntry(
-                        action,
-                        aa.isEmpty ? 0.0 : (aa.where((element) => element.evaluation == 3).length - aa.where((element) => element.evaluation == -3).length) / aa.length * 100
-                    );
-                  }))
-              );
-
-              return MapEntry(p, s);
-            }
-        )
-    );
-
-    perfection = Map.fromEntries(
-        widget.players.map<MapEntry<Player, Stats>>(
-                (p) {
-              Iterable<Record> filtered = widget.records.where((element) => element.player == p && widget.actions.contains(element.action));
-
-              Stats s = Stats(
-                  total: filtered.isEmpty ? 0.0 : max(0, ((filtered.where((element) => element.evaluation == 3).length - filtered.where((element) => element.evaluation < 0).length) / filtered.length) * 100),
-                  perAction: Map.fromEntries(widget.actions.map<MapEntry<TSA.Action, double>>((action) {
-                    Iterable<Record> aa = filtered.where((element) => element.action == action);
-                    return MapEntry(
-                        action,
-                        aa.isEmpty ? 0.0 : max(0, ((aa.where((element) => element.evaluation == 3).length - aa.where((element) => element.evaluation < 0).length) / aa.length) * 100)
-                    );
-                  }))
-              );
-
-              return MapEntry(p, s);
-            }
-        )
-    );
-
-
-    touches = Map.fromEntries(
-        widget.players.map<MapEntry<Player, Stats>>(
-                (p) {
-              Iterable<Record> filtered = widget.records.where((element) => element.player == p && widget.actions.contains(element.action));
-
-              Stats s = Stats(
-                  total: filtered.length.toDouble(),
-                  perAction: Map.fromEntries(widget.actions.map<MapEntry<TSA.Action, double>>((action) {
-                    Iterable<Record> aa = filtered.where((element) => element.action == action);
-                    return MapEntry(
-                        action,
-                        aa.length.toDouble()
-                    );
-                  }))
-              );
-
-              return MapEntry(p, s);
-            }
-        )
-    );
 
     series = [
       Charts.Series<Player, String>(
         id: 'Positivity',
         domainFn: (Player p, _) => p.shortName,
-        measureFn: (Player p, _) => positivity[p].total,
-        data: widget.players.where((element) => widget.records.map<Player>((e) => e.player).contains(element)).toList(), ///select only players which have at least on record
+        measureFn: (Player p, _) => widget.statistics.positivity[p],
+        data: widget.statistics.training.players.where((element) => widget.statistics.training.records.map<Player>((e) => e.player).contains(element)).toList(), ///select only players which have at least on record
       ),
       Charts.Series<Player, String>(
         id: 'Efficiency',
         domainFn: (Player p, _) => p.shortName,
-        measureFn: (Player p, _) => efficiency[p].total,
-        data: widget.players.where((element) => widget.records.map<Player>((e) => e.player).contains(element)).toList(), ///select only players which have at least on record
+        measureFn: (Player p, _) => widget.statistics.efficiency[p],
+        data: widget.statistics.training.players.where((element) => widget.statistics.training.records.map<Player>((e) => e.player).contains(element)).toList(), ///select only players which have at least on record
       ),
       Charts.Series<Player, String>(
         id: 'Perfection',
         domainFn: (Player p, _) => p.shortName,
-        measureFn: (Player p, _) => perfection[p].total,
-        data: widget.players.where((element) => widget.records.map<Player>((e) => e.player).contains(element)).toList(), ///select only players which have at least on record
+        measureFn: (Player p, _) => widget.statistics.perfection[p],
+        data: widget.statistics.training.players.where((element) => widget.statistics.training.records.map<Player>((e) => e.player).contains(element)).toList(), ///select only players which have at least on record
+      ),
+      Charts.Series<Player, String>(
+        id: 'Total actions',
+        domainFn: (Player p, _) => p.shortName,
+        measureFn: (Player p, _) => widget.statistics.touches[p],
+        data: widget.statistics.training.players.where((element) => widget.statistics.training.records.map<Player>((e) => e.player).contains(element)).toList(), ///select only players which have at least on record
       )
     ];
 
@@ -351,7 +256,7 @@ class _ClassicChartsState extends State<ClassicCharts> {
                           ),
                         ]
                     )
-                  ] + widget.players.map((player) => [
+                  ] + widget.statistics.training.players.map((player) => [
                     TableRow(
                         children: [
                           GestureDetector(
@@ -389,33 +294,33 @@ class _ClassicChartsState extends State<ClassicCharts> {
                           Padding(
                             padding: EdgeInsets.all(3.0),
                             child: Text(
-                              positivity[player].total.toStringAsFixed(2),
+                              widget.statistics.positivity[player].toStringAsFixed(2),
                               textAlign: TextAlign.right,
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.all(3.0),
                             child: Text(
-                              efficiency[player].total.toStringAsFixed(2),
+                              widget.statistics.efficiency[player].toStringAsFixed(2),
                               textAlign: TextAlign.right,
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.all(3.0),
                             child: Text(
-                              perfection[player].total.toStringAsFixed(2),
+                              widget.statistics.perfection[player].toStringAsFixed(2),
                               textAlign: TextAlign.right,
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.all(3.0),
                             child: Text(
-                              touches[player].total.toInt().toString(),
+                              widget.statistics.touches[player].toString(),
                               textAlign: TextAlign.right,
                             ),
                           ),
                         ]
-                    ), ] + widget.actions.map((action) => TableRow(
+                    ), ] + widget.statistics.training.actions.map((action) => TableRow(
                       children: [
                         AnimatedContainer(
                           duration: Duration(milliseconds: 300),
@@ -436,7 +341,7 @@ class _ClassicChartsState extends State<ClassicCharts> {
                           child: Padding(
                             padding: EdgeInsets.all(3.0),
                             child: Text(
-                              positivity[player].perAction[action].toStringAsFixed(2),
+                              widget.statistics.positivityPerAction[player][action].toStringAsFixed(2),
                               textAlign: TextAlign.right,
                             ),
                           ),
@@ -448,7 +353,7 @@ class _ClassicChartsState extends State<ClassicCharts> {
                           child: Padding(
                             padding: EdgeInsets.all(3.0),
                             child: Text(
-                              efficiency[player].perAction[action].toStringAsFixed(2),
+                              widget.statistics.efficiencyPerAction[player][action].toStringAsFixed(2),
                               textAlign: TextAlign.right,
                             ),
                           ),
@@ -460,7 +365,7 @@ class _ClassicChartsState extends State<ClassicCharts> {
                           child: Padding(
                             padding: EdgeInsets.all(3.0),
                             child: Text(
-                              perfection[player].perAction[action].toStringAsFixed(2),
+                              widget.statistics.perfectionPerAction[player][action].toStringAsFixed(2),
                               textAlign: TextAlign.right,
                             ),
                           ),
@@ -472,7 +377,7 @@ class _ClassicChartsState extends State<ClassicCharts> {
                           child: Padding(
                             padding: EdgeInsets.all(3.0),
                             child: Text(
-                              touches[player].perAction[action].toInt().toString(),
+                              widget.statistics.touchesPerAction[player][action].toString(),
                               textAlign: TextAlign.right,
                             ),
                           ),
@@ -493,19 +398,22 @@ class _ClassicChartsState extends State<ClassicCharts> {
                   },
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    child: Container(
-                      padding: EdgeInsets.all(10.0),
-                      width: max(60.0 + 50.0 * widget.players.where((element) => widget.records.map<Player>((e) => e.player).contains(element)).length, box.maxWidth),
-                      height: 300.0,
-                      child: Charts.BarChart(
-                        series,
-                        barGroupingType: Charts.BarGroupingType.grouped,
-                        animate: true,
-                        behaviors: [
-                          Charts.SeriesLegend()
-                        ],
+                    child: RepaintBoundary(
+                      key: _chartKey,
+                      child: Container(
+                          padding: EdgeInsets.all(10.0),
+                          width: max(60.0 + 50.0 * widget.statistics.training.players.where((element) => widget.statistics.training.records.map<Player>((e) => e.player).contains(element)).length, box.maxWidth),
+                          height: 300.0,
+                          child: Charts.BarChart(
+                            series,
+                            barGroupingType: Charts.BarGroupingType.grouped,
+                            animate: true,
+                            behaviors: [
+                              Charts.SeriesLegend()
+                            ],
+                          )
                       ),
-                    ),
+                    )
                   ),
                 )
             ),
@@ -517,6 +425,15 @@ class _ClassicChartsState extends State<ClassicCharts> {
           child: CircularProgressIndicator(),
         ),
       )
+    );
+  }
+
+  @override
+  Future<ExportedChart> getImage() async {
+    RenderRepaintBoundary boundary = _chartKey.currentContext.findRenderObject();
+    return ExportedChart(
+        title: "Common indicators for each player (all actions)",
+        image: await (await boundary.toImage(pixelRatio: 8.0)).toByteData(format: ImageByteFormat.png)
     );
   }
 

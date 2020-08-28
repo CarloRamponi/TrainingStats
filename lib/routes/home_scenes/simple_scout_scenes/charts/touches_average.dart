@@ -16,80 +16,51 @@
  *
  */
 
-import 'dart:math';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:charts_flutter/flutter.dart' as Charts;
 import 'package:flutter/material.dart';
-import 'package:training_stats/datatypes/player.dart';
-import 'package:training_stats/datatypes/record.dart';
-import 'package:training_stats/datatypes/action.dart' as TSA;
+import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:random_string/random_string.dart';
+import 'package:training_stats/datatypes/statistics.dart';
+import 'package:path/path.dart' as path;
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exportable_chart_state.dart';
 
 class TouchesAverage extends StatefulWidget {
 
-  final List<TSA.Action> actions;
-  final List<Player> players;
-  final List<Record> records;
+  final Statistics statistics;
 
   TouchesAverage({
     Key key,
-    this.actions,
-    this.players,
-    this.records
+    this.statistics,
   }): super(key: key);
 
   @override
-  _TouchesAverageState createState() => _TouchesAverageState();
+  TouchesAverageState createState() => TouchesAverageState();
 
 }
 
-class _TouchesAverageState extends State<TouchesAverage> {
+class TouchesAverageState extends ExportableChartState<TouchesAverage> {
 
-  final List<int> intervals = [10, 20, 40, 60, 90, 180, 270];
-  int timeInterval;
-
-  List<Charts.Series<int, num>> series;
-  Map<Player, List<int>> values;
-
-  int minTime, maxTime;
+  int intervalIndex;
 
   Future<bool> loading;
 
+  GlobalKey _chartKey = GlobalKey();
+
   @override
   void initState() {
-    timeInterval = intervals.length ~/ 2; ///select the mean one
-    minTime = (widget.records.map((e) => e.timestamp.millisecondsSinceEpoch).reduce(min) / 1000.0).floor();
-    maxTime = (widget.records.map((e) => e.timestamp.millisecondsSinceEpoch).reduce(max) / 1000.0).ceil();
-    _refresh();
+    intervalIndex = widget.statistics.touchesAverageIntervals.length ~/ 2; ///select the mean one
+    loading = _loadFirstData();
     super.initState();
   }
 
-  void _refresh() {
-    setState(() {
-      loading = _computeValues();
-    });
-  }
-
-  Future<bool> _computeValues() async {
-
-    values = Map.fromEntries(widget.players.where((player) => widget.records.map((record) => record.player).contains(player)).map<MapEntry<Player, List<int>>>((player) {
-      List<int> list = [];
-      for(int i = 0; i <= (maxTime - minTime) ~/ intervals[timeInterval]; i++) {
-        list.add(
-          widget.records.where((record) => record.player == player && (record.timestamp.millisecondsSinceEpoch ~/ 1000.0) >= minTime + (i * intervals[timeInterval]) && minTime + ((i+1) * intervals[timeInterval]) > (record.timestamp.millisecondsSinceEpoch  ~/ 1000.0) && widget.actions.contains(record.action)).length
-        );
-      }
-      return MapEntry(player, list);
-    }).toList());
-
-    series = widget.players.where((player) => widget.records.map((record) => record.player).contains(player)).map<Charts.Series<int, num>>((player) => Charts.Series<int, num>(
-      id: player.shortName,
-      domainFn: (int n, _) => (n * intervals[timeInterval]),
-      measureFn: (int n, _) => values[player][n],
-      data: List.generate((maxTime - minTime) ~/ intervals[timeInterval], (index) => index)
-    )).toList();
-
+  Future<bool> _loadFirstData() async {
+    widget.statistics.touchesAverage(intervalIndex);
     return true;
-
   }
 
   @override
@@ -100,34 +71,41 @@ class _TouchesAverageState extends State<TouchesAverage> {
         Padding(
           padding: EdgeInsets.all(10.0),
           child: Slider(
-            value: timeInterval.toDouble(),
+            value: intervalIndex.toDouble(),
             onChanged: (value) {
               setState(() {
-                timeInterval = value.toInt();
-                _refresh();
+                intervalIndex = value.toInt();
               });
             },
             min: 0.0,
-            max: intervals.length.toDouble() - 1,
-            divisions: intervals.length - 1,
-            label: intervals[timeInterval].toString(),
+            max: widget.statistics.touchesAverageIntervals.length.toDouble() - 1,
+            divisions: widget.statistics.touchesAverageIntervals.length - 1,
+            label: widget.statistics.touchesAverageIntervals[intervalIndex].toString(),
           ),
         ),
         Container(
           padding: EdgeInsets.all(10.0),
           height: 300.0,
           child: FutureBuilder(
-            builder: (context, snap) => snap.hasData ? Charts.LineChart(
-              series,
-              animate: true,
-              behaviors: [
-                Charts.SeriesLegend(
-                  position: Charts.BehaviorPosition.top,
-                  outsideJustification: Charts.OutsideJustification.endDrawArea,
-                  horizontalFirst: true,
-                  desiredMaxColumns: 6,
-                )
-              ],
+            builder: (context, snap) => snap.hasData ? RepaintBoundary(
+              key: _chartKey,
+              child: Charts.LineChart(
+                widget.statistics.training.players.where((player) => widget.statistics.training.records.map((record) => record.player).contains(player)).map<Charts.Series<int, num>>((player) => Charts.Series<int, num>(
+                    id: player.shortName,
+                    domainFn: (int n, _) => (n * widget.statistics.touchesAverageIntervals[intervalIndex]),
+                    measureFn: (int n, _) => widget.statistics.touchesAverage(intervalIndex)[player][n],
+                    data: List.generate(widget.statistics.touchesAverage(intervalIndex)[player].length, (index) => index)
+                )).toList(),
+                animate: true,
+                behaviors: [
+                  Charts.SeriesLegend(
+                    position: Charts.BehaviorPosition.top,
+                    outsideJustification: Charts.OutsideJustification.endDrawArea,
+                    horizontalFirst: true,
+                    desiredMaxColumns: 6,
+                  )
+                ],
+              ),
             ) : Center(
               child: CircularProgressIndicator(),
             ),
@@ -135,6 +113,15 @@ class _TouchesAverageState extends State<TouchesAverage> {
           ),
         ),
       ],
+    );
+  }
+
+  @override
+  Future<ExportedChart> getImage() async {
+    RenderRepaintBoundary boundary = _chartKey.currentContext.findRenderObject();
+    return ExportedChart(
+      title: "Ball touches every ${widget.statistics.touchesAverageIntervals[intervalIndex]} seconds",
+      image: await (await boundary.toImage(pixelRatio: 8.0)).toByteData(format: ImageByteFormat.png)
     );
   }
 
