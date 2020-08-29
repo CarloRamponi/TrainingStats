@@ -48,16 +48,6 @@ class HomeScene extends StatelessWidget  {
             Navigator.of(context).pushNamed("/simple_scout");
         }
     ),
-    FunctionalityDescription(
-        title: "Title",
-        description: "Description",
-        onTap: (context) {}
-    ),
-    FunctionalityDescription(
-        title: "Title",
-        description: "Description",
-        onTap: (context) {}
-    ),
   ];
 
   Widget _functionalityCard(BuildContext context, FunctionalityDescription f) {

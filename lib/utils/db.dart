@@ -209,9 +209,8 @@ class DB {
         INSERT INTO `Role` (name, color) VALUES
         ('Setter', ${0xff4caf50}),
         ('Libero', ${0xffffc107}),
-        ('Middle hitter', ${0xff2196f3}),
-        ('Outside hitter', ${0xff9c27b0}),
-        ('Opposite hitter', ${0xff009688})
+        ('Central', ${0xff2196f3}),
+        ('Hitter', ${0xff9c27b0})
       ''');
 
     await db.execute('''
