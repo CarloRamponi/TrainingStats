@@ -30,7 +30,8 @@ class ActionsScene extends StatefulWidget {
 
 class _ActionsSceneState extends State<ActionsScene> {
 
-  Future<List<LocalAction.Action>> actions;
+  Future<List<LocalAction.Action>> actionsFtr;
+  List<LocalAction.Action> actions;
 
   LocalAction.Action _creatingAction;
 
@@ -51,48 +52,37 @@ class _ActionsSceneState extends State<ActionsScene> {
         onPressed: _createActionPopup,
       ),
       body: FutureBuilder(
-        future: actions,
+        future: actionsFtr,
         builder: (context, AsyncSnapshot<List<LocalAction.Action>> actionSnap) {
           if(actionSnap.hasData) {
             if(actionSnap.data.length > 0) {
-              return ListView.separated(
-                  itemBuilder: (context, index) {
-
-                    LocalAction.Action action = actionSnap.data[index];
-
-                    return ListTile(
-                      leading: GestureDetector(
-                        child: CircleAvatar(
-                          backgroundColor: action.color,
-                        ),
-                        onTap: () {
-                          _changeColorPopup(action);
-                        },
-                      ),
-                      title: Text(action.name),
-                      subtitle: Text(action.shortName),
-                      trailing: IconButton(
-                        icon: Icon(
-                          Icons.remove,
-                          color: Colors.red,
-                        ),
-                        onPressed: () {
-                          _removeAction(action);
-                        },
-                      ),
-                      onLongPress: () {
-                        _removeAction(action);
-                      },
-                      onTap: () {
-                        _editAction(action);
-                      },
-                    );
-                  },
-                  separatorBuilder: (_, __) => Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10.0),
-                    child: Divider(),
+              return ReorderableListView(
+                children: actions.map((action) => ListTile(
+                  key: ValueKey(action.id),
+                  leading: GestureDetector(
+                    child: CircleAvatar(
+                      backgroundColor: action.color,
+                    ),
+                    onTap: () {
+                      _changeColorPopup(action);
+                    },
                   ),
-                  itemCount: actionSnap.data.length
+                  title: Text(action.name),
+                  subtitle: Text(action.shortName),
+                  trailing: IconButton(
+                    icon: Icon(
+                      Icons.remove,
+                      color: Colors.red,
+                    ),
+                    onPressed: () {
+                      _removeAction(action);
+                    },
+                  ),
+                  onTap: () {
+                    _editAction(action);
+                  },
+                )).toList(),
+                onReorder: _onReorder,
               );
             } else {
               return Center(
@@ -111,8 +101,23 @@ class _ActionsSceneState extends State<ActionsScene> {
 
   void _refresh() {
     setState(() {
-      actions = LocalAction.ActionProvider.getAll();
+      actionsFtr = LocalAction.ActionProvider.getAll()..then((value) => actions = value);
     });
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      LocalAction.Action action = actions.removeAt(oldIndex);
+      actions.insert(newIndex - (newIndex > oldIndex ? 1 : 0), action);
+    });
+    _updateOrders();
+  }
+
+  void _updateOrders() {
+    for(int index = 0; index < actions.length; index++) {
+      actions[index].index = index;
+      LocalAction.ActionProvider.update(actions[index]);
+    }
   }
 
   void _removeAction(LocalAction.Action a) async {

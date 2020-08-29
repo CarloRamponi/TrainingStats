@@ -99,7 +99,9 @@ class DB {
           `id` INTEGER PRIMARY KEY AUTOINCREMENT,
           `name` VARCHAR(128) NOT NULL,
           `short_name` CHAR(2) NOT NULL,
-          `color` INTEGER NULL)
+          `color` INTEGER NULL,
+          `orderIndex` INTEGER NOT NULL DEFAULT 0
+          )
       ''');
 
     await db.execute('''

@@ -403,15 +403,17 @@ class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
                       child: Container(
                           padding: EdgeInsets.all(10.0),
                           width: max(60.0 + 50.0 * widget.statistics.training.players.where((element) => widget.statistics.training.records.map<Player>((e) => e.player).contains(element)).length, box.maxWidth),
-                          height: 300.0,
+                          height: 370.0,
                           child: Charts.BarChart(
                             series,
                             barGroupingType: Charts.BarGroupingType.grouped,
                             animate: true,
                             behaviors: [
-                              Charts.SeriesLegend()
+                              Charts.SeriesLegend(
+                                desiredMaxColumns: 3
+                              )
                             ],
-                          )
+                          ),
                       ),
                     )
                   ),

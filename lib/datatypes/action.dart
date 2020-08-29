@@ -28,15 +28,17 @@ class Action {
   String name;
   String shortName;
   Color color;
+  int index;
 
-  Action({this.id, this.name, this.shortName, this.color});
+  Action({this.id, this.name, this.shortName, this.color, this.index});
 
   static Action fromMap(Map<String, dynamic> m) {
     return Action(
-        id: m['id'],
-        name: m['name'],
-        shortName: m['short_name'],
-        color: m['color'] == null ? null : Color(m['color'])
+      id: m['id'],
+      name: m['name'],
+      shortName: m['short_name'],
+      color: m['color'] == null ? null : Color(m['color']),
+      index: m['orderIndex']
     );
   }
 
@@ -44,7 +46,8 @@ class Action {
     Map<String, dynamic> ret = {
       'name': this.name,
       'short_name': this.shortName,
-      'color': this.color.value
+      'color': this.color.value,
+      'orderIndex' : this.index
     };
 
     if (id != null) {
@@ -68,7 +71,7 @@ class ActionProvider {
   }
 
   static Future<List<Action>> getAll() async {
-    List<Map<String, dynamic>> roles = await (await DB.instance).db.query('Action');
+    List<Map<String, dynamic>> roles = await (await DB.instance).db.query('Action', orderBy: 'orderIndex ASC');
     return roles.map((m) => Action.fromMap(m)).toList();
   }
 
