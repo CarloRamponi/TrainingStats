@@ -174,6 +174,31 @@ class DB {
           ON UPDATE CASCADE)
     ''');
 
+    await db.execute('''
+      CREATE TABLE `ActionSum` (
+        `training` INTEGER NOT NULL,
+        `player` INTEGER NOT NULL,
+        `action` INTEGER NOT NULL,
+        `evaluation` INTEGER NOT NULL,
+        `sum` INTEGER NOT NULL,
+        PRIMARY KEY (`training`, `player`, `action`, `evaluation`),
+        CONSTRAINT `fk_ActionSum_1`
+          FOREIGN KEY (`training`)
+          REFERENCES `Training` (`id`)
+          ON DELETE CASCADE
+          ON UPDATE CASCADE,
+        CONSTRAINT `fk_ActionSum_2`
+          FOREIGN KEY (`player`)
+          REFERENCES `Player` (`id`)
+          ON DELETE CASCADE
+          ON UPDATE CASCADE,
+        CONSTRAINT `fk_ActionSum_3`
+          FOREIGN KEY (`action`)
+          REFERENCES `Action` (`id`)
+          ON DELETE CASCADE
+          ON UPDATE CASCADE)    
+    ''');
+
   }
 
   Future<void> _insertDefaults(Database db, int version) async {
@@ -189,11 +214,11 @@ class DB {
 
     await db.execute('''
         INSERT INTO `Action` (name, short_name, color) VALUES
-          ('Serve', 'SR', ${0xff9c27b0}),
+          ('Serve', 'S', ${0xff9c27b0}),
           ('Reception', 'R', ${0xffffc107}),
-          ('Block', 'B', ${0xff009688}),
           ('Attack', 'A', ${0xff2196f3}),
-          ('Set', 'ST', ${0xff4caf50})
+          ('Block', 'B', ${0xff009688}),
+          ('Game', 'G', ${0xff4caf50})
       ''');
 
   }

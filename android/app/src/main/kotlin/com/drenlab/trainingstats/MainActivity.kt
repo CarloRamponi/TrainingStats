@@ -1,4 +1,4 @@
-package com.drenlab.training_stats
+package com.drenlab.trainingstats
 
 import io.flutter.embedding.android.FlutterActivity
 

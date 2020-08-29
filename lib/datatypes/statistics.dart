@@ -123,41 +123,52 @@ class Statistics {
 
     _positivity = Map.fromEntries(
         training.players.map<MapEntry<Player, double>>(
-            (p) {
-              Iterable<Record> filtered = training.records.where((element) => element.player == p);
-              return MapEntry(p, filtered.isEmpty ? 0.0 : (filtered.where((element) => element.evaluation > 0).length / filtered.length) * 100);
-            }
+            (p) => MapEntry(p, (training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key > 0).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b) / training.actionsSums[p].values.map<int>((e) => e.values.reduce((a, b) => a + b)).reduce((a, b) => a + b))*100)
         )
     );
 
-    _positivityPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, double>>>((player) {
-      Iterable<Record> filtered = training.records.where((element) => element.player == player);
-      return MapEntry(player, Map.fromEntries(training.actions.map<MapEntry<Action, double>>((action) {
-        Iterable<Record> actionFiltered = filtered.where((record) => record.action == action);
-        return MapEntry(action, actionFiltered.isEmpty ? 0.0 : (actionFiltered.where((element) => element.evaluation > 0).length / actionFiltered.length) * 100);
-      })));
-    }));
+    _positivityPerAction = Map.fromEntries(
+      training.players.map<MapEntry<Player, Map<Action, double>>>((player) => MapEntry(
+        player,
+        Map.fromEntries(
+          training.actions.map((action) => MapEntry(
+            action,
+            (training.actionsSums[player][action].entries.where((element) => element.key > 0).map((e) => e.value).reduce((a, b) => a + b) / training.actionsSums[player][action].values.reduce((a, b) => a + b))*100
+          ))
+        )
+      ))
+    );
 
   }
 
   void _computeEfficiency() {
 
     _efficiency = Map.fromEntries(
-        training.players.map<MapEntry<Player, double>>(
-                (p) {
-              Iterable<Record> filtered = training.records.where((element) => element.player == p);
-              return MapEntry(p, ((filtered.where((element) => element.evaluation == 3).length - filtered.where((element) => element.evaluation == -3).length) / filtered.length) * 100);
-            }
-        )
+      training.players.map<MapEntry<Player, double>>(
+        (p) => MapEntry(
+            p,
+            (
+                (
+                    training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key == 3).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b) -
+                    training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key == -3).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b)
+                ) /
+                training.actionsSums[p].values.map<int>((e) => e.values.reduce((a, b) => a + b)).reduce((a, b) => a + b))*100)
+      )
     );
 
-    _efficiencyPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, double>>>((player) {
-      Iterable<Record> filtered = training.records.where((element) => element.player == player);
-      return MapEntry(player, Map.fromEntries(training.actions.map<MapEntry<Action, double>>((action) {
-        Iterable<Record> actionFiltered = filtered.where((record) => record.action == action);
-        return MapEntry(action, actionFiltered.isEmpty ? 0.0 : ((actionFiltered.where((element) => element.evaluation == 3).length - actionFiltered.where((element) => element.evaluation == -3).length) / actionFiltered.length) * 100);
-      })));
-    }));
+    _efficiencyPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, double>>>((player) => MapEntry(
+        player,
+        Map.fromEntries(
+            training.actions.map((action) => MapEntry(
+                action,
+                (
+                    (
+                        training.actionsSums[player][action].entries.where((element) => element.key == 3).map((e) => e.value).reduce((a, b) => a + b) -
+                        training.actionsSums[player][action].entries.where((element) => element.key == -3).map((e) => e.value).reduce((a, b) => a + b)
+                    ) / training.actionsSums[player][action].values.reduce((a, b) => a + b))*100
+            ))
+        )
+    )));
 
   }
 
@@ -165,20 +176,32 @@ class Statistics {
 
     _perfection = Map.fromEntries(
         training.players.map<MapEntry<Player, double>>(
-                (p) {
-              Iterable<Record> filtered = training.records.where((element) => element.player == p);
-              return MapEntry(p, ((filtered.where((element) => element.evaluation == 3).length - filtered.where((element) => element.evaluation < 0).length) / filtered.length) * 100);
-            }
+          (p) => MapEntry(
+            p,
+            (
+                (
+                    training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key == 3).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b) -
+                    training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key < 0).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b)
+                ) /
+                training.actionsSums[p].values.map<int>((e) => e.values.reduce((a, b) => a + b)).reduce((a, b) => a + b)
+            )*100
+          )
         )
     );
 
-    _perfectionPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, double>>>((player) {
-      Iterable<Record> filtered = training.records.where((element) => element.player == player);
-      return MapEntry(player, Map.fromEntries(training.actions.map<MapEntry<Action, double>>((action) {
-        Iterable<Record> actionFiltered = filtered.where((record) => record.action == action);
-        return MapEntry(action, actionFiltered.isEmpty ? 0.0 : ((actionFiltered.where((element) => element.evaluation == 3).length - actionFiltered.where((element) => element.evaluation < 0).length) / actionFiltered.length) * 100);
-      })));
-    }));
+    _perfectionPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, double>>>((player) => MapEntry(
+        player,
+        Map.fromEntries(
+            training.actions.map((action) => MapEntry(
+                action,
+                (
+                    (
+                        training.actionsSums[player][action].entries.where((element) => element.key == 3).map((e) => e.value).reduce((a, b) => a + b) -
+                            training.actionsSums[player][action].entries.where((element) => element.key < 0).map((e) => e.value).reduce((a, b) => a + b)
+                    ) / training.actionsSums[player][action].values.reduce((a, b) => a + b))*100
+            ))
+        )
+    )));
 
   }
 
@@ -186,20 +209,22 @@ class Statistics {
 
     _touches = Map.fromEntries(
         training.players.map<MapEntry<Player, int>>(
-                (p) {
-              Iterable<Record> filtered = training.records.where((element) => element.player == p);
-              return MapEntry(p, filtered.length);
-            }
+          (p) => MapEntry(
+            p,
+            training.actionsSums[p].values.map<int>((e) => e.values.reduce((a, b) => a + b)).reduce((a, b) => a + b)
+          )
         )
     );
 
-    _touchesPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, int>>>((player) {
-      Iterable<Record> filtered = training.records.where((element) => element.player == player);
-      return MapEntry(player, Map.fromEntries(training.actions.map<MapEntry<Action, int>>((action) {
-        Iterable<Record> actionFiltered = filtered.where((record) => record.action == action);
-        return MapEntry(action, actionFiltered.length);
-      })));
-    }));
+    _touchesPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, int>>>((player) => MapEntry(
+        player,
+        Map.fromEntries(
+            training.actions.map((action) => MapEntry(
+                action,
+                training.actionsSums[player][action].values.reduce((a, b) => a + b)
+            ))
+        )
+    )));
 
   }
 

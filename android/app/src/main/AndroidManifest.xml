@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.drenlab.training_stats">
+    package="com.drenlab.trainingstats">
     <!-- io.flutter.app.FlutterApplication is an android.app.Application that
          calls FlutterMain.startInitialization(this); in its onCreate method.
          In most cases you can leave this as-is, but you if you want to provide
@@ -51,7 +51,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="com.drenlab.training_stats.provider"
+            android:authorities="com.drenlab.trainingstats.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/team.dart';
+import 'package:training_stats/utils/functions.dart';
 import 'package:training_stats/widgets/drawer.dart';
 
 class PlayersScene extends StatefulWidget {

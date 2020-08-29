@@ -19,7 +19,27 @@
 
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
 List<List<T>> chunk<T>(List<T> lst, int size) {
   return List.generate((lst.length / size).ceil(),
           (i) => lst.sublist(i * size, min(i * size + size, lst.length)));
+}
+
+Future<T> loadingPopup<T>(BuildContext context, Future<T> ftr) async {
+
+  return await showDialog<T>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+
+        ftr.then((T value) => Navigator.of(context).pop(value));
+
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+
+      },
+  );
+
 }

@@ -18,13 +18,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:training_stats/datatypes/action.dart' as TrainingStatsAction;
-import 'package:training_stats/datatypes/player.dart';
-import 'package:training_stats/datatypes/team.dart';
-import 'package:training_stats/datatypes/training.dart';
-import 'package:training_stats/routes/home_scenes/simple_scout_scenes/actions_selection_scene.dart';
-import 'package:training_stats/routes/players_scenes/players_selection_scene.dart';
-import 'package:training_stats/routes/teams_scenes/team_selection.dart';
 import 'package:training_stats/widgets/drawer.dart';
 
 class FunctionalityDescription {

@@ -26,6 +26,7 @@ import 'package:training_stats/datatypes/board_type.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
+import 'package:training_stats/utils/functions.dart';
 import 'package:training_stats/widgets/evaluation_board.dart';
 import 'package:training_stats/widgets/evaluation_history_board.dart';
 import 'package:training_stats/widgets/grid_segmented_control.dart';
@@ -78,7 +79,7 @@ class _SimpleScoutSceneState extends State<SimpleScoutScene> {
     training.ts_end = DateTime.now();
     training.records = records;
 
-    training = await TrainingProvider.create(training);
+    training = await loadingPopup(context, TrainingProvider.create(training));
 
     Navigator.pushReplacementNamed(context, '/simple_scout/report', arguments: training);
 

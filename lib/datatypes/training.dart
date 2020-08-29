@@ -31,6 +31,7 @@ class Training {
   List<Player> players;
   List<Action> actions;
   List<Record> records;
+  Map<Player, Map<Action, Map<int, int>>> actionsSums;
 
   Training({
     this.id,
@@ -39,7 +40,7 @@ class Training {
     this.actions,
     this.ts_start,
     this.ts_end,
-    this.records
+    this.records,
   }) {
     if(this.ts_start == null) {
       this.ts_start = DateTime.now();
@@ -48,32 +49,38 @@ class Training {
 
   static Future<Training> fromMap(Map<String, dynamic> m, {bool loadRecords = false}) async {
 
+    Training ret = Training(
+      id: m['id'],
+      team: await TeamProvider.get(m['team']),
+      ts_start: DateTime.parse(m['ts_start']),
+      ts_end: DateTime.parse(m['ts_end']),
+      actions: await TrainingProvider.getActions(m['id']),
+      players: await TrainingProvider.getPlayers(m['id']),
+    );
+
     if(loadRecords) {
-      return Training(
-          id: m['id'],
-          team: await TeamProvider.get(m['team']),
-          ts_start: DateTime.parse(m['ts_start']),
-          ts_end: DateTime.parse(m['ts_end']),
-          actions: await TrainingProvider.getActions(m['id']),
-          players: await TrainingProvider.getPlayers(m['id']),
-          records: await TrainingProvider.getRecords(m['id'])
-      );
-    } else {
-      return Training(
-          id: m['id'],
-          team: await TeamProvider.get(m['team']),
-          ts_start: DateTime.parse(m['ts_start']),
-          ts_end: DateTime.parse(m['ts_end']),
-          actions: await TrainingProvider.getActions(m['id']),
-          players: await TrainingProvider.getPlayers(m['id']),
-      );
+      await ret.loadRecords();
     }
+
+    return ret;
+
   }
 
   Future<bool> loadRecords() {
     if(records == null) {
       return TrainingProvider.getRecords(this.id).then((value) {
         this.records = value;
+        return loadActionSum();
+      }).catchError((e) => false);
+    } else {
+      return Future.value(true);
+    }
+  }
+
+  Future<bool> loadActionSum() {
+    if(actionsSums == null) {
+      return TrainingProvider.getActionSums(this).then((value) {
+        this.actionsSums = value;
         return true;
       }).catchError((e) => false);
     } else {
@@ -139,6 +146,32 @@ class TrainingProvider {
       t.records[i].id = await db.insert('Record', map);
     }
 
+    t.actionsSums = {};
+
+    for(Player p in t.players) {
+
+      t.actionsSums[p] = {};
+
+      for(Action a in t.actions) {
+
+        t.actionsSums[p][a] = {};
+
+        for(int eval in [-3, -2, -1, 1, 2, 3]) {
+
+          int sum = t.records.where((record) => record.player == p && record.action == a && record.evaluation == eval).length;
+          t.actionsSums[p][a][eval] = sum;
+
+          await db.insert('ActionSum', {
+            'training' : t.id,
+            'player' : p.id,
+            'action' : a.id,
+            'evaluation' : eval,
+            'sum' : sum
+          });
+        }
+      }
+    }
+
     return t;
   }
 
@@ -180,6 +213,24 @@ class TrainingProvider {
 
   static Future<int> delete(int id) async {
     return (await DB.instance).db.delete('Training', where: "id = ?", whereArgs: [id]);
+  }
+
+  static Future<Map<Player, Map<Action, Map<int, int>>>> getActionSums(Training training) async {
+
+    Map<Player, Map<Action, Map<int, int>>> ret = {};
+
+    for(Player p in training.players) {
+      ret[p] = {};
+      for(Action a in training.actions) {
+        ret[p][a] = {};
+        for(int eval in [-3, -2, -1, 1, 2, 3]) {
+          ret[p][a][eval] = (await (await DB.instance).db.query("ActionSum", where: 'training = ? AND player = ? AND action = ? AND evaluation = ?', whereArgs: [training.id, p.id, a.id, eval])).first['sum'] ?? 0;
+        }
+      }
+    }
+
+    return ret;
+
   }
 
 }
