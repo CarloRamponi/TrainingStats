@@ -90,7 +90,7 @@ class _GridSegmentedControlState<T> extends State<GridSegmentedControl<T>> {
                             return Row(
                               children: chunk.map((element) {
 
-                                Color bgColor = widget.selected == element.value ? Theme.of(context).primaryColor : element.color.withOpacity(0.5);
+                                Color bgColor = widget.selected == element.value ? Theme.of(context).primaryColor : element.color;
 
                                 return Container(
                                   width: size,

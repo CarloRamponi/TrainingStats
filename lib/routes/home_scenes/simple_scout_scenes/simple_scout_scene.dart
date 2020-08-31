@@ -79,9 +79,14 @@ class _SimpleScoutSceneState extends State<SimpleScoutScene> {
     training.ts_end = DateTime.now();
     training.records = records;
 
-    training = await loadingPopup(context, TrainingProvider.create(training));
+    if(records.length > 0) {
+      training = await loadingPopup(context, TrainingProvider.create(training));
 
-    Navigator.pushReplacementNamed(context, '/simple_scout/report', arguments: training);
+      Navigator.pushReplacementNamed(
+          context, '/simple_scout/report', arguments: training);
+    } else {
+      Navigator.of(context).pop();
+    }
 
   }
 

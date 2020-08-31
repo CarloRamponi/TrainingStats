@@ -24,7 +24,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 import 'package:training_stats/datatypes/action.dart';
 import 'package:training_stats/datatypes/player.dart';
-import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exportable_chart_state.dart';
 import 'package:training_stats/utils/functions.dart';
@@ -65,6 +64,9 @@ class Statistics {
 
   Map<Player, double> get positivity {
     if(_positivity == null) {
+      if(_touches == null) {
+        _computeTouches();
+      }
       _computePositivity();
     }
     return _positivity;
@@ -72,6 +74,9 @@ class Statistics {
 
   Map<Player, double> get efficiency {
     if(_efficiency == null) {
+      if(_touches == null) {
+        _computeTouches();
+      }
       _computeEfficiency();
     }
     return _efficiency;
@@ -79,6 +84,9 @@ class Statistics {
 
   Map<Player, double> get perfection {
     if(_perfection == null) {
+      if(_touches == null) {
+        _computeTouches();
+      }
       _computePerfection();
     }
     return _perfection;
@@ -123,7 +131,7 @@ class Statistics {
 
     _positivity = Map.fromEntries(
         training.players.map<MapEntry<Player, double>>(
-            (p) => MapEntry(p, (training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key > 0).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b) / training.actionsSums[p].values.map<int>((e) => e.values.reduce((a, b) => a + b)).reduce((a, b) => a + b))*100)
+            (p) => MapEntry(p, _touches[p] > 0 ? (training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key > 0).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b) / _touches[p])*100 : 0.0)
         )
     );
 
@@ -133,7 +141,7 @@ class Statistics {
         Map.fromEntries(
           training.actions.map((action) => MapEntry(
             action,
-            (training.actionsSums[player][action].entries.where((element) => element.key > 0).map((e) => e.value).reduce((a, b) => a + b) / training.actionsSums[player][action].values.reduce((a, b) => a + b))*100
+            _touchesPerAction[player][action] > 0 ? (training.actionsSums[player][action].entries.where((element) => element.key > 0).map((e) => e.value).reduce((a, b) => a + b) / _touchesPerAction[player][action])*100 : 0.0
           ))
         )
       ))
@@ -147,12 +155,16 @@ class Statistics {
       training.players.map<MapEntry<Player, double>>(
         (p) => MapEntry(
             p,
+            _touches[p] > 0 ?
             (
                 (
                     training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key == 3).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b) -
                     training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key == -3).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b)
                 ) /
-                training.actionsSums[p].values.map<int>((e) => e.values.reduce((a, b) => a + b)).reduce((a, b) => a + b))*100)
+                training.actionsSums[p].values.map<int>((e) => e.values.reduce((a, b) => a + b)).reduce((a, b) => a + b)
+            )*100
+            : 0.0
+        )
       )
     );
 
@@ -161,11 +173,13 @@ class Statistics {
         Map.fromEntries(
             training.actions.map((action) => MapEntry(
                 action,
+                _touchesPerAction[player][action] > 0 ?
                 (
                     (
                         training.actionsSums[player][action].entries.where((element) => element.key == 3).map((e) => e.value).reduce((a, b) => a + b) -
                         training.actionsSums[player][action].entries.where((element) => element.key == -3).map((e) => e.value).reduce((a, b) => a + b)
                     ) / training.actionsSums[player][action].values.reduce((a, b) => a + b))*100
+                : 0.0
             ))
         )
     )));
@@ -178,13 +192,15 @@ class Statistics {
         training.players.map<MapEntry<Player, double>>(
           (p) => MapEntry(
             p,
+            _touches[p] > 0 ?
             (
-                (
-                    training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key == 3).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b) -
-                    training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key < 0).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b)
-                ) /
-                training.actionsSums[p].values.map<int>((e) => e.values.reduce((a, b) => a + b)).reduce((a, b) => a + b)
+              (
+                  training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key == 3).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b) -
+                  training.actionsSums[p].values.map<int>((e) => (e.entries.where((element) => element.key < 0).map((e) => e.value).reduce((a, b) => a + b))).reduce((a, b) => a + b)
+              ) /
+              training.actionsSums[p].values.map<int>((e) => e.values.reduce((a, b) => a + b)).reduce((a, b) => a + b)
             )*100
+            : 0.0
           )
         )
     );
@@ -194,11 +210,13 @@ class Statistics {
         Map.fromEntries(
             training.actions.map((action) => MapEntry(
                 action,
+                _touchesPerAction[player][action] > 0 ?
                 (
                     (
                         training.actionsSums[player][action].entries.where((element) => element.key == 3).map((e) => e.value).reduce((a, b) => a + b) -
                             training.actionsSums[player][action].entries.where((element) => element.key < 0).map((e) => e.value).reduce((a, b) => a + b)
                     ) / training.actionsSums[player][action].values.reduce((a, b) => a + b))*100
+                : 0.0
             ))
         )
     )));

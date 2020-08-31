@@ -19,6 +19,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:csv/csv.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -26,6 +27,7 @@ import 'package:flutter_share/flutter_share.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:random_string/random_string.dart';
+import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/statistics.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/classics.dart';
@@ -33,6 +35,7 @@ import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exp
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/touches_average.dart';
 import 'package:path/path.dart' as path;
 import 'package:pdf/widgets.dart' as pw;
+import 'package:training_stats/utils/functions.dart';
 
 class SimpleScoutReportScene extends StatefulWidget{
 
@@ -106,17 +109,56 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
 
         break;
       case ReportAction.export:
-
-        ExportedChart classicChart = await _classicChart.currentState.getImage();
-        ExportedChart avgChart = await _avgChart.currentState.getImage();
-
-        String filePath = path.join((await getTemporaryDirectory()).path, randomString(10, from: 62, to: 86) + ".pdf");
-        File(filePath).writeAsBytesSync((await statistics.generateReport([classicChart, avgChart])).toList());
-
-        FlutterShare.shareFile(title: "Simple scout report.pdf", filePath: filePath);
-
+        _showExportPopUp();
         break;
     }
+  }
+
+  void _exportPdf() async {
+
+    ExportedChart classicChart = await loadingPopup(context, _classicChart.currentState.getImage());
+    ExportedChart avgChart = await loadingPopup(context, _avgChart.currentState.getImage());
+
+    String filePath = path.join((await getTemporaryDirectory()).path, randomString(10, from: 62, to: 86) + ".pdf");
+    File(filePath).writeAsBytesSync((await loadingPopup(context, statistics.generateReport([classicChart, avgChart]))).toList());
+
+    FlutterShare.shareFile(title: "Simple scout report.pdf", filePath: filePath);
+
+  }
+
+  void _exportCsv() async {
+
+    Map<int, String> evalLabels = await EvaluationProvider.getAll();
+
+    List<List<dynamic>> list = [<dynamic>["Player", "Player name", "action", "evaluation value", "evaluation label", "timestamp"]] + statistics.training.records.map<List<dynamic>>((record) => ["${record.player.shortName}", "${record.player.name}", "${record.action.name}", record.evaluation, evalLabels[record.evaluation], record.timestamp.toIso8601String()]).toList();
+    String csv = ListToCsvConverter().convert(list);
+    String filePath = path.join((await getTemporaryDirectory()).path, randomString(10, from: 62, to: 86) + ".csv");
+    File(filePath).writeAsStringSync(csv);
+    FlutterShare.shareFile(title: "training_${statistics.training.team.teamName}_${statistics.training.ts_start.toIso8601String()}.csv", filePath: filePath);
+
+  }
+
+  void _showExportPopUp() {
+    showDialog(context: context, builder: (context) => SimpleDialog(
+      children: [
+        ListTile(
+          leading: Icon(Icons.picture_as_pdf),
+          title: Text("Export as pdf"),
+          onTap: () {
+            Navigator.of(context).pop();
+            _exportPdf();
+          },
+        ),
+        ListTile(
+          leading: Icon(Icons.poll),
+          title: Text("Export as csv"),
+          onTap: () {
+            Navigator.of(context).pop();
+            _exportCsv();
+          },
+        )
+      ],
+    ));
   }
 
   

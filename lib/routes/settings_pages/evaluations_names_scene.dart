@@ -82,7 +82,7 @@ class _EvaluationsNamesSceneState extends State<EvaluationsNamesScene> {
                           backgroundColor: Evaluation.getColor(eval),
                           child: Center(
                             child: Text(
-                              name,
+                              eval.toString(),
                               style: Theme.of(context).textTheme.button.copyWith(color: useWhiteForeground(Evaluation.getColor(eval)) ? Colors.white : Colors.black),
                             ),
                           ),
