@@ -18,6 +18,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:training_stats/datatypes/player.dart';
+import 'package:training_stats/datatypes/team.dart';
+import 'package:training_stats/datatypes/training.dart';
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/actions_selection_scene.dart';
+import 'package:training_stats/routes/home_scenes/video_scout_scenes/video_scout_scene.dart';
+import 'package:training_stats/datatypes/action.dart' as TrainingStatsAction;
+import 'package:training_stats/routes/players_scenes/players_selection_scene.dart';
+import 'package:training_stats/routes/teams_scenes/team_selection.dart';
 import 'package:training_stats/widgets/drawer.dart';
 
 class FunctionalityDescription {
@@ -46,6 +54,47 @@ class HomeScene extends StatelessWidget  {
         description: "The classical scouting, in which you record all the ball touches.",
         onTap: (context) async {
             Navigator.of(context).pushNamed("/simple_scout");
+        }
+    ),
+    FunctionalityDescription(
+        title: "Video scout",
+        description: "The classical scouting, but with video! Ist't that cool?!",
+        onTap: (context) async {
+
+          Team team = await Navigator.push(context, MaterialPageRoute<Team>(
+              builder: (context) => SelectTeam()
+          ));
+
+          if(team != null) {
+            List<Player> players = await Navigator.push(
+                context, MaterialPageRoute<List<Player>>(
+                builder: (context) => PlayersSelectionScene(team: team)
+            ));
+
+            if(players != null) {
+              List<TrainingStatsAction.Action> actions = await Navigator.of(
+                  context).push(
+                  MaterialPageRoute<List<TrainingStatsAction.Action>>(
+                      builder: (context) => ActionsSelectionScene()
+                  ));
+
+              if(actions != null) {
+                Training training = Training(
+                  team: team,
+                  players: players,
+                  actions: actions,
+                  video: true
+                );
+
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => VideoScoutScene(
+                    training: training,
+                  )
+                ));
+              }
+            }
+          }
+
         }
     ),
   ];
@@ -95,14 +144,14 @@ class HomeScene extends StatelessWidget  {
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.start,
-                children: functionalities.sublist(0, functionalities.length ~/ 2).map<Widget>((f) => _functionalityCard(context, f)).toList(),
+                children: functionalities.sublist(0, (functionalities.length / 2).ceil()).map<Widget>((f) => _functionalityCard(context, f)).toList(),
               ),
             ),
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.start,
-                children: functionalities.sublist(functionalities.length ~/ 2).map<Widget>((f) => _functionalityCard(context, f)).toList(),
+                children: functionalities.sublist((functionalities.length / 2).ceil()).map<Widget>((f) => _functionalityCard(context, f)).toList(),
               ),
             )
           ],

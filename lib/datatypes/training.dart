@@ -32,6 +32,7 @@ class Training {
   List<Action> actions;
   List<Record> records;
   Map<Player, Map<Action, Map<int, int>>> actionsSums;
+  bool video;
 
   Training({
     this.id,
@@ -41,6 +42,7 @@ class Training {
     this.ts_start,
     this.ts_end,
     this.records,
+    this.video
   }) {
     if(this.ts_start == null) {
       this.ts_start = DateTime.now();
@@ -54,6 +56,7 @@ class Training {
       team: await TeamProvider.get(m['team']),
       ts_start: DateTime.parse(m['ts_start']),
       ts_end: DateTime.parse(m['ts_end']),
+      video: m['video'] == 1,
       actions: await TrainingProvider.getActions(m['id']),
       players: await TrainingProvider.getPlayers(m['id']),
     );
@@ -93,6 +96,7 @@ class Training {
       'team': this.team.id,
       'ts_start': this.ts_start?.toIso8601String(),
       'ts_end': this.ts_end?.toIso8601String(),
+      'video': this.video ? 1 : 0
     };
 
     if (id != null) {

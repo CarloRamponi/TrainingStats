@@ -110,6 +110,7 @@ class DB {
           `ts_start` TIMESTAMP NOT NULL,
           `ts_end` TIMESTAMP NOT NULL,
           `team` INTEGER NOT NULL,
+          `video` INTEGER NOT NULL DEFAULT 0,
           CONSTRAINT `fk_Training_1`
             FOREIGN KEY (`team`)
             REFERENCES `Team` (`id`)

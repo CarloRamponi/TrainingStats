@@ -41,6 +41,9 @@ dependencies:
   random_string: ^2.1.0
   pdf: 1.11.0
   csv: 4.0.3
+  camera: 0.5.8+5
+  flutter_ffmpeg: ^0.2.10
+  video_player:
 
 dev_dependencies:
   flutter_test:

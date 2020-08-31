@@ -166,33 +166,34 @@ class EvaluationHistoryBoardState extends State<EvaluationHistoryBoard> {
       }
     }
 
-    return Container(
-        height: 60,
-        width: double.infinity,
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            Divider(
-              height: 0.0,
-            ),
-            Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                fit: StackFit.expand,
-                children: <Widget>[
-                  Positioned(
-                    top: -10,
-                    child: Icon(
-                      Icons.arrow_drop_down,
-                      size: 30,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ] + widgets,
+    return ClipRect(
+      child: Container(
+          height: 60,
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              Divider(
+                height: 0.0,
               ),
-            )
-          ],
-        )
-      );
+              Expanded(
+                child: Stack(
+                  alignment: Alignment.center,
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    Positioned(
+                      top: -10,
+                      child: Icon(
+                        Icons.arrow_drop_down,
+                        size: 30,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ] + widgets,
+                ),
+              )
+            ],
+          )
+      ),
+    );
   }
 }
