@@ -48,3 +48,7 @@ app.*.map.json
 pubspec.lock
 
 Scripts/
+
+ios/Flutter/.last_build_id
+
+ios/Podfile.lock
