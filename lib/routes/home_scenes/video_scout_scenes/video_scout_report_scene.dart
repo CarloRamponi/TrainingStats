@@ -16,110 +16,376 @@
  *
  */
 
+import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
+import 'package:flutter/painting.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:training_stats/datatypes/evaluation.dart';
+import 'package:training_stats/datatypes/record.dart';
+import 'package:training_stats/datatypes/training.dart';
 import 'package:video_player/video_player.dart';
+import 'package:path/path.dart' as p;
 
 class VideoScoutReportScene extends StatefulWidget {
 
-  final String path;
-  final List<Duration> ts;
+  final Training training;
 
-  VideoScoutReportScene({this.path, this.ts});
+  VideoScoutReportScene({this.training});
 
   @override _VideoScoutReportSceneState createState() => _VideoScoutReportSceneState();
 }
 
+enum Options {
+  export,
+  filter
+}
+
 class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
 
-  VideoPlayerController _controller;
+  List<VideoPlayerController> _controllers;
   Future<void> _initializeVideoPlayer;
-  FlutterFFmpeg _flutterFFmpeg;
-  FlutterFFmpegConfig _flutterFFmpegConfig;
+  Future<void> _documentsDirectoryFtr;
+  String path;
+  int _currentVideo;
+  bool _initialized = false;
+
+  bool _playing = false;
+
+  bool _buttonsVisible = true;
+  Timer _buttonsTimer;
 
   @override
   void initState() {
-    _controller = VideoPlayerController.file(File(widget.path));
-    _initializeVideoPlayer = _controller.initialize();
-    _controller.setLooping(true);
-//    _flutterFFmpeg = new FlutterFFmpeg();
-//    _flutterFFmpegConfig = new FlutterFFmpegConfig();
-//    _flutterFFmpeg.execute("-i ${widget.path} -ss ${_printDuration(widget.ts.first - Duration(seconds: 3))} -to ${_printDuration(widget.ts.first + Duration(seconds: 2))} -c copy ${widget.path + "_cut.mp4"}").then((value) {
-//      print("ffmped exited with ec $value");
-//      _flutterFFmpegConfig.getLastCommandOutput().then((value) {
-//        print("output:\n$value");
-//      });
-//    });
+    _currentVideo = 0;
+    _documentsDirectoryFtr = getApplicationDocumentsDirectory()..then((value) {
+      path = p.join(value.path, "video_scout", widget.training.id.toString());
+      widget.training.loadRecords().then((value) {
+        _controllers = widget.training.records.map((r) => VideoPlayerController.file(File(p.join(path, r.id.toString() + ".mp4")))).toList();
+        _initializeVideoPlayer = Future.wait(_controllers.map((controller) => controller.initialize()).toList())..then((value) {
 
+          //add listeners
+          _controllers.forEach((element) {
+            element.addListener(_controllerListener);
+          });
+
+          //notify that controllers are ready
+          setState(() {
+            _initialized = true;
+          });
+
+        });
+      });
+    });
     super.initState();
+  }
+
+  void _controllerListener() {
+//    //check if we reached the end of the video
+//    if((await _controllers[_currentVideo].position).inMilliseconds >= _controllers[_currentVideo].value.duration.inMilliseconds) {
+//      await _controllers[_currentVideo].pause();
+//    }
+    setState(() {});
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    for(VideoPlayerController _controller in _controllers)
+      _controller?.dispose();
     super.dispose();
   }
 
-  String _printDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-    String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+  void _resetButtonsTimer() {
+    _buttonsTimer?.cancel();
+    _buttonsTimer = Timer(Duration(seconds: 3), () {
+      setState(() {
+        _buttonsVisible = false;
+      });
+    });
+  }
+
+  void _onOptionSelected(Options option) async {
+    switch(option) {
+      case Options.export:
+        // TODO: Handle this case.
+        break;
+      case Options.filter:
+        // TODO: Handle this case.
+        break;
+    }
+  }
+
+  void _changeVideo(int value) async {
+    _controllers[_currentVideo].pause();
+    _currentVideo = (_currentVideo + value) % widget.training.records.length;
+    await _controllers[_currentVideo].seekTo(Duration.zero);
+    if(_playing)
+      await _controllers[_currentVideo].play();
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              height: 350.0,
-              child: FutureBuilder(
-                future: _initializeVideoPlayer,
-                builder: (context, snap) => snap.connectionState == ConnectionState.done ? AspectRatio(
-                  aspectRatio: _controller.value.aspectRatio,
-                  child: VideoPlayer(_controller),
-                ) : Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-            ),
-            _controller.value.isPlaying ? FlatButton(
-              child: Text("PAUSE"),
-              onPressed: () {
-                setState(() {
-                  _controller.pause();
-                });
+      body: Builder(
+        builder: (context) {
+          if(_initialized) {
+            return GestureDetector(
+              onTap: () {
+                if(_buttonsVisible) {
+                  _buttonsTimer?.cancel();
+                  setState(() {
+                    _buttonsVisible = false;
+                  });
+                } else {
+                  setState(() {
+                    _buttonsVisible = true;
+                  });
+                  _resetButtonsTimer();
+                }
               },
-            ) : FlatButton(
-              child: Text("PLAY"),
-              onPressed: () {
-                setState(() {
-                  _controller.play();
-                });
-              },
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: widget.ts.map((t) => FlatButton(
-                    child: Text("${t.inMinutes}:${t.inSeconds - t.inMinutes * 60}:${t.inMilliseconds - t.inSeconds * 1000}"),
-                    onPressed: () {
-                      _controller.seekTo(t);
-                    },
-                  )).toList(),
-                ),
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.hardEdge,
+                fit: StackFit.passthrough,
+                children: [
+                  Align(
+                    alignment: Alignment.center,
+                    child: Builder(
+                      builder: (context) {
+
+                        Size size = MediaQuery.of(context).size;
+                        double ratio = _controllers[_currentVideo].value.aspectRatio;
+
+                        double width, height;
+
+                        //I want the video to cover all the available space
+                        if(size.height*ratio < size.width) {
+                          width = size.width;
+                          height = width / ratio;
+                        } else {
+                          height = size.height;
+                          width = height * ratio;
+                        }
+
+                        return Container(
+                          width: width,
+                          height: height,
+                          child: AspectRatio(
+                            aspectRatio: _controllers[_currentVideo].value.aspectRatio,
+                            child: VideoPlayer(_controllers[_currentVideo]),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  AnimatedPositioned(
+                    duration: Duration(milliseconds: 200),
+                    bottom: _buttonsVisible ? 20.0 : -100.0,
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          FutureBuilder(
+                            future: _controllers[_currentVideo].position,
+                            builder: (BuildContext context, AsyncSnapshot<Duration> durationSnap) {
+                              if(durationSnap.hasData) {
+
+                                if(durationSnap.data >= _controllers[_currentVideo].value.duration) {
+                                  _playing = false;
+                                }
+
+                                return Slider(
+                                  min: 0.0,
+                                  max: _controllers[_currentVideo].value.duration.inMilliseconds.toDouble(),
+                                  value: min(durationSnap.data.inMilliseconds.toDouble(), _controllers[_currentVideo].value.duration.inMilliseconds.toDouble()),
+                                  onChanged: (val) async {
+                                    _resetButtonsTimer();
+                                    await _controllers[_currentVideo].pause();
+                                    await _controllers[_currentVideo].seekTo(Duration(milliseconds: val.toInt()));
+                                    setState(() {});
+                                  },
+                                  onChangeEnd: (val) async {
+                                    if(_playing)
+                                      await _controllers[_currentVideo].play();
+                                  },
+                                );
+                              } else {
+                                return Container();
+                              }
+                            },
+                          ),
+                          Row(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                FlatButton(
+                                  padding: EdgeInsets.zero,
+                                  clipBehavior: Clip.hardEdge,
+                                  color: Colors.black38.withOpacity(0.8),
+                                  shape: CircleBorder(),
+                                  child: Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(10.0),
+                                        child: Icon(
+                                          Icons.arrow_back,
+                                          color: Colors.white,
+                                          size: 20.0,
+                                        ),
+                                      )
+                                  ),
+                                  onPressed: () {
+                                    _resetButtonsTimer();
+                                    _changeVideo(-1);
+                                  },
+                                ),
+                                FlatButton(
+                                  padding: EdgeInsets.zero,
+                                  clipBehavior: Clip.hardEdge,
+                                  color: Colors.black38.withOpacity(0.8),
+                                  shape: CircleBorder(),
+                                  child: Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(10.0),
+                                        child: Icon(
+                                          _playing ? Icons.pause : Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 30.0,
+                                        ),
+                                      )
+                                  ),
+                                  onPressed: () {
+                                    _resetButtonsTimer();
+
+                                    if(_playing)
+                                      _controllers[_currentVideo].pause();
+                                    else
+                                      _controllers[_currentVideo].play();
+
+                                    setState(() {
+                                      _playing = !_playing;
+                                    });
+                                  },
+                                ),
+                                FlatButton(
+                                  padding: EdgeInsets.zero,
+                                  clipBehavior: Clip.hardEdge,
+                                  color: Colors.black38.withOpacity(0.8),
+                                  shape: CircleBorder(),
+                                  child: Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(10.0),
+                                        child: Icon(
+                                          Icons.arrow_forward,
+                                          color: Colors.white,
+                                          size: 20.0,
+                                        ),
+                                      )
+                                  ),
+                                  onPressed: () {
+                                    _resetButtonsTimer();
+                                    _changeVideo(1);
+                                  },
+                                ),
+                              ]
+                          ),
+                        ],
+                      ),
+                    )
+                  ),
+                  AnimatedPositioned(
+                    duration: Duration(milliseconds: 200),
+                    left: 0.0,
+                    top: _buttonsVisible ? 0.0 : -100.0,
+                    child: Container(
+                      padding: EdgeInsets.only(top: 20.0, bottom: 5.0),
+                      decoration: BoxDecoration(
+                        color: Colors.black38.withOpacity(0.6)
+                      ),
+                      width: MediaQuery.of(context).size.width,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(left:20.0),
+                            child: Container(
+                              height: 30.0,
+                              width: 30.0,
+                              decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Evaluation.getColor(widget.training.records[_currentVideo].evaluation)
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(left:20.0),
+                            child: Text(
+                              "${widget.training.records[_currentVideo].player.name}, ${widget.training.records[_currentVideo].action.name}",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15.0
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(right: 10.0),
+                            child: PopupMenuButton<Options>(
+                              onSelected: _onOptionSelected,
+                              icon: Icon(
+                                Icons.more_vert,
+                                color: Colors.white,
+                              ),
+                              itemBuilder: (context) => [
+                                PopupMenuItem<Options>(
+                                  value: Options.filter,
+                                  child: Row(
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.only(right: 10.0),
+                                        child: Icon(Icons.filter_list),
+                                      ),
+                                      Text("Filter")
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem<Options>(
+                                  value: Options.export,
+                                  child: Row(
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.only(right: 10.0),
+                                        child: Icon(Icons.share),
+                                      ),
+                                      Text("Share")
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    )
+                  )
+                ],
               ),
-            )
-          ],
-        ),
-      ),
+            );
+          } else {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
+      )
     );
   }
 

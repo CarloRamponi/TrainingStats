@@ -60,41 +60,7 @@ class HomeScene extends StatelessWidget  {
         title: "Video scout",
         description: "The classical scouting, but with video! Ist't that cool?!",
         onTap: (context) async {
-
-          Team team = await Navigator.push(context, MaterialPageRoute<Team>(
-              builder: (context) => SelectTeam()
-          ));
-
-          if(team != null) {
-            List<Player> players = await Navigator.push(
-                context, MaterialPageRoute<List<Player>>(
-                builder: (context) => PlayersSelectionScene(team: team)
-            ));
-
-            if(players != null) {
-              List<TrainingStatsAction.Action> actions = await Navigator.of(
-                  context).push(
-                  MaterialPageRoute<List<TrainingStatsAction.Action>>(
-                      builder: (context) => ActionsSelectionScene()
-                  ));
-
-              if(actions != null) {
-                Training training = Training(
-                  team: team,
-                  players: players,
-                  actions: actions,
-                  video: true
-                );
-
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => VideoScoutScene(
-                    training: training,
-                  )
-                ));
-              }
-            }
-          }
-
+          Navigator.of(context).pushNamed("/video_scout");
         }
     ),
   ];

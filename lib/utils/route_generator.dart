@@ -26,6 +26,9 @@ import 'package:training_stats/routes/home_scenes/score_keeper_scenes/score_keep
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/simple_scout_report_scene.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/simple_scout_scene.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/trainings_scene.dart';
+import 'package:training_stats/routes/home_scenes/video_scout_scenes/trainings_scene.dart';
+import 'package:training_stats/routes/home_scenes/video_scout_scenes/video_scout_report_scene.dart';
+import 'package:training_stats/routes/home_scenes/video_scout_scenes/video_scout_scene.dart';
 import 'package:training_stats/routes/players_scenes/create_player_scene.dart';
 import 'package:training_stats/routes/settings_pages/about_scene.dart';
 import 'package:training_stats/routes/settings_pages/actions_scene.dart';
@@ -161,6 +164,40 @@ class RouteGenerator {
         return MaterialPageRoute(
             builder: (_) {
               return SimpleScoutReportScene(
+                  training: args
+              );
+            }
+        );
+
+        break;
+
+      case '/video_scout':
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return VideoScoutTrainingsScene();
+            }
+        );
+
+        break;
+
+      case '/video_scout/scout':
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return VideoScoutScene(
+                  training: args
+              );
+            }
+        );
+
+        break;
+
+      case '/video_scout/report':
+
+        return MaterialPageRoute(
+            builder: (_) {
+              return VideoScoutReportScene(
                   training: args
               );
             }

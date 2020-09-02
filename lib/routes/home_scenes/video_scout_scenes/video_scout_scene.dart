@@ -28,7 +28,9 @@ import 'package:training_stats/datatypes/board_type.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
+import 'package:training_stats/routes/home_scenes/video_scout_scenes/video_scout_report_scene.dart';
 import 'package:training_stats/utils/functions.dart';
+import 'package:training_stats/widgets/blinker.dart';
 import 'package:training_stats/widgets/evaluation_board.dart';
 import 'package:training_stats/widgets/evaluation_history_board.dart';
 import 'package:training_stats/widgets/grid_segmented_control.dart';
@@ -120,11 +122,23 @@ class _VideoScoutSceneState extends State<VideoScoutScene> {
     training.ts_end = DateTime.now();
     training.records = records;
 
+    DateTime endTs = DateTime.now();
+    await controller.stopVideoRecording();
+    await controller.dispose();
+
+    setState(() {
+      _timerObj.cancel();
+      controller= null;
+    });
+
     if(records.length > 0) {
+
       training = await loadingPopup(context, TrainingProvider.create(training));
 
-      Navigator.pushReplacementNamed(
-          context, '/simple_scout/report', arguments: training);
+      bool result = await loadingPopup(context, createClips(filePath, videoTsStart, endTs, training), "Creating clips");
+
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => VideoScoutReportScene(training: training,)));
     } else {
       Navigator.of(context).pop();
     }
@@ -346,32 +360,63 @@ class _VideoScoutSceneState extends State<VideoScoutScene> {
                   onPressed: undoBtnEnabled() ? () { undo(); } : null,
                 ),
               ),
-              Align(
-                alignment: Alignment.bottomLeft,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      videoPreviewFullScreen = !videoPreviewFullScreen;
-                    });
-                  },
-                  child: AnimatedContainer(
-                      duration: Duration(milliseconds: 500),
-                      height: videoPreviewFullScreen ? MediaQuery.of(context).size.height : 150.0,
-                      child: initialized ? Container(
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.only(topRight: Radius.circular(videoPreviewFullScreen ? 0.0 : 5.0))
-                        ),
-                        clipBehavior: Clip.hardEdge,
-                        child: AspectRatio(
-                          aspectRatio: controller.value.aspectRatio,
-                          child: CameraPreview(controller),
-                        ),
-                      ) : Center(
-                        child: CircularProgressIndicator(),
-                      )
-                  ),
+              if(controller != null)
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        videoPreviewFullScreen = !videoPreviewFullScreen;
+                      });
+                    },
+                    child: AnimatedContainer(
+                        duration: Duration(milliseconds: 500),
+                        height: videoPreviewFullScreen ? MediaQuery.of(context).size.height : 150.0,
+                        child: initialized ? Stack(
+                          fit: StackFit.loose,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(topRight: Radius.circular(videoPreviewFullScreen ? 0.0 : 5.0))
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              child: AspectRatio(
+                                aspectRatio: controller.value.aspectRatio,
+                                child: CameraPreview(controller),
+                              )
+                            ),
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: Padding(
+                                padding: EdgeInsets.all(5.0),
+                                child: Blinker(
+                                  interval: Duration(seconds: 1),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        height: 10.0,
+                                        width: 10.0,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.red
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.only(left: 5.0),
+                                        child: Text("REC"),
+                                      )
+                                    ],
+                                  ),
+                                )
+                              ),
+                            )
+                          ],
+                        ) : Center(
+                          child: CircularProgressIndicator(),
+                        )
+                    ),
+                  )
                 )
-              )
             ],
           )
       ),

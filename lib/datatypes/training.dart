@@ -119,6 +119,15 @@ class TrainingProvider {
     return trainings;
   }
 
+  static Future<List<Training>> getVideoTrainings() async {
+    List<Map<String, dynamic>> list = await (await DB.instance).db.query('Training', where: "video = 1", orderBy: "ts_start DESC");
+    List<Training> trainings = [];
+    for(int i = 0; i < list.length; i++) {
+      trainings.add(await Training.fromMap(list[i]));
+    }
+    return trainings;
+  }
+
   static Future<Training> get(int id) async {
     Map<String, dynamic> ret = (await (await DB.instance).db.query('Training', where: "id = ?", whereArgs: [id])).first;
     return ret != null ? Training.fromMap(ret) : null;
