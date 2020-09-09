@@ -19,16 +19,19 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:training_stats/datatypes/action.dart' as TSA;
 import 'package:training_stats/datatypes/evaluation.dart';
+import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path/path.dart' as p;
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 class VideoScoutReportScene extends StatefulWidget {
 
@@ -44,57 +47,207 @@ enum Options {
   filter
 }
 
+enum OrderByWhat {
+  Time,
+  Player,
+  Action,
+  Evaluation
+}
+
+extension OrderByWhatName on OrderByWhat {
+  String name() => this.toString().split(".").last;
+}
+
+enum OrderByOrder {
+  Ascending,
+  Descending
+}
+
+extension OrderByOrderName on OrderByOrder {
+  String name() => this.toString().split(".").last;
+}
+
 class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
 
-  List<VideoPlayerController> _controllers;
-  Future<void> _initializeVideoPlayer;
-  Future<void> _documentsDirectoryFtr;
+
   String path;
-  int _currentVideo;
+  double height, width, aspectRatio;
+
   bool _initialized = false;
+  bool _changingVideo = false;
+  Duration _currentPosition = Duration.zero;
+
+  Record _currentRecord;
+
+  List<Record> filteredRecords;
+  VideoPlayerController _controller;
 
   bool _playing = false;
+  bool _looping = false;
 
   bool _buttonsVisible = true;
   Timer _buttonsTimer;
 
+  bool _playlistOpen = false;
+
+  Map<int, Future<Uint8List>> thumbnails;
+
+
+  Map<Player, bool> playersSelected;
+  Map<TSA.Action, bool> actionsSelected;
+  Map<int, bool> evaluationsSelected;
+
+  OrderByWhat orderByWhat = OrderByWhat.Time;
+  OrderByOrder orderByOrder = OrderByOrder.Ascending;
+
+  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
+
   @override
   void initState() {
-    _currentVideo = 0;
-    _documentsDirectoryFtr = getApplicationDocumentsDirectory()..then((value) {
+
+    getApplicationDocumentsDirectory()..then((value) {
       path = p.join(value.path, "video_scout", widget.training.id.toString());
       widget.training.loadRecords().then((value) {
-        _controllers = widget.training.records.map((r) => VideoPlayerController.file(File(p.join(path, r.id.toString() + ".mp4")))).toList();
-        _initializeVideoPlayer = Future.wait(_controllers.map((controller) => controller.initialize()).toList())..then((value) {
 
-          //add listeners
-          _controllers.forEach((element) {
-            element.addListener(_controllerListener);
-          });
+        playersSelected = Map.fromEntries(widget.training.players.map((e) => MapEntry(e, true)));
+        actionsSelected = Map.fromEntries(widget.training.actions.map((e) => MapEntry(e, true)));
+        evaluationsSelected = Map.fromEntries([-3, -2, -1, 1, 2, 3].map((e) => MapEntry(e, true)));
 
-          //notify that controllers are ready
+        filteredRecords = widget.training.records;
+
+        thumbnails = Map.fromEntries(filteredRecords.map((record) => MapEntry(
+          record.id,
+          VideoThumbnail.thumbnailData(
+              video: p.join(path, record.id.toString() + ".mp4"),
+              quality: 75,
+              timeMs: 3000
+          )
+        )));
+
+        _currentRecord = filteredRecords.first;
+
+        initController(_currentRecord).then((_) {
           setState(() {
+
+            Size size = MediaQuery.of(context).size;
+            aspectRatio = _controller.value.aspectRatio;
+
+            //I want the video to cover all the available space
+            if(size.height*aspectRatio < size.width) {
+              width = size.width;
+              height = width / aspectRatio;
+            } else {
+              height = size.height;
+              width = height * aspectRatio;
+            }
+
             _initialized = true;
           });
-
         });
       });
     });
     super.initState();
   }
 
+  Future<void> initController(Record record) async {
+    setState(() {
+      _changingVideo = true;
+    });
+
+    try {
+      var tmp = VideoPlayerController.file(
+          File(p.join(path, _currentRecord.id.toString() + ".mp4")));
+      await tmp.initialize();
+      tmp.addListener(_controllerListener);
+      tmp.setVolume(0.0);
+
+      _currentRecord = record;
+      var old = _controller;
+      _controller = tmp;
+
+      old?.dispose();
+    } catch (e) {
+      print(e.toString());
+      return initController(record);
+    }
+
+    setState(() {
+      _changingVideo = false;
+    });
+  }
+
   void _controllerListener() {
-//    //check if we reached the end of the video
-//    if((await _controllers[_currentVideo].position).inMilliseconds >= _controllers[_currentVideo].value.duration.inMilliseconds) {
-//      await _controllers[_currentVideo].pause();
-//    }
+    //check if we reached the end of the video
+    if(_currentPosition != null && _controller != null && _currentPosition >= _controller.value.duration) {
+      setState(() {
+        _currentPosition = Duration.zero;
+        if(!_looping) {
+          _playing = false;
+          _controller.pause();
+        }
+        _controller.seekTo(Duration.zero);
+      });
+    }
     setState(() {});
+  }
+
+  Future<void> _refreshFilters() async {
+    filteredRecords = widget.training.records.where((record) => playersSelected[record.player] && actionsSelected[record.action] && evaluationsSelected[record.evaluation]).toList();
+  }
+
+  Future<void> _refreshOrder() async {
+    switch(orderByWhat) {
+      case OrderByWhat.Time:
+        switch(orderByOrder) {
+          case OrderByOrder.Ascending:
+            filteredRecords.sort((r1, r2) => r1.timestamp.millisecondsSinceEpoch - r2.timestamp.millisecondsSinceEpoch);
+            break;
+          case OrderByOrder.Descending:
+            filteredRecords.sort((r1, r2) => r2.timestamp.millisecondsSinceEpoch - r1.timestamp.millisecondsSinceEpoch);
+            break;
+        }
+        break;
+      case OrderByWhat.Player:
+        switch(orderByOrder) {
+          case OrderByOrder.Ascending:
+            filteredRecords.sort((r1, r2) => r1.player.name.compareTo(r2.player.name));
+            break;
+          case OrderByOrder.Descending:
+            filteredRecords.sort((r1, r2) => r2.player.name.compareTo(r1.player.name));
+            break;
+        }
+        break;
+      case OrderByWhat.Action:
+        switch(orderByOrder) {
+          case OrderByOrder.Ascending:
+            filteredRecords.sort((r1, r2) => r1.action.name.compareTo(r2.action.name));
+            break;
+          case OrderByOrder.Descending:
+            filteredRecords.sort((r1, r2) => r2.action.name.compareTo(r1.action.name));
+            break;
+        }
+        break;
+      case OrderByWhat.Evaluation:
+        switch(orderByOrder) {
+          case OrderByOrder.Ascending:
+            filteredRecords.sort((r1, r2) => r1.evaluation - r2.evaluation);
+            break;
+          case OrderByOrder.Descending:
+            filteredRecords.sort((r1, r2) => r2.evaluation - r1.evaluation);
+            break;
+        }
+        break;
+    }
+
+    if(!filteredRecords.contains(_currentRecord) && filteredRecords.isNotEmpty) {
+      await initController(filteredRecords.first);
+
+    }
   }
 
   @override
   void dispose() {
-    for(VideoPlayerController _controller in _controllers)
-      _controller?.dispose();
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -119,273 +272,681 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
   }
 
   void _changeVideo(int value) async {
-    _controllers[_currentVideo].pause();
-    _currentVideo = (_currentVideo + value) % widget.training.records.length;
-    await _controllers[_currentVideo].seekTo(Duration.zero);
-    if(_playing)
-      await _controllers[_currentVideo].play();
+    if(filteredRecords.length > 0) {
+      await initController(filteredRecords[(max(
+          filteredRecords.indexOf(_currentRecord) + value, 0)) %
+          filteredRecords.length]);
+      await _controller.play();
+      setState(() {
+        _playing = true;
+      });
+    }
+  }
+
+  void _openPlaylist() async {
+    _playing = false;
+    await _controller?.pause();
+    setState(() {
+      _playlistOpen = true;
+    });
+  }
+
+//  void _onReorderPlaylist(int oldIndex, int newIndex) {
+//    setState(() {
+//      Record r = filteredRecords.removeAt(oldIndex);
+//      filteredRecords.insert(newIndex - (newIndex > oldIndex ? 1 : 0), r);
+//    });
+//  }
+
+  void _onRecordTapped(Record record) async {
+    await initController(record);
+    await _controller.play();
+    setState(() {
+      _playlistOpen = false;
+      _playing = true;
+    });
+  }
+
+  void _resetFilters() {
+    playersSelected = Map.fromEntries(widget.training.players.map((e) => MapEntry(e, true)));
+    actionsSelected = Map.fromEntries(widget.training.actions.map((e) => MapEntry(e, true)));
+    evaluationsSelected = Map.fromEntries([-3, -2, -1, 1, 2, 3].map((e) => MapEntry(e, true)));
+    orderByWhat = OrderByWhat.Time;
+    orderByOrder = OrderByOrder.Ascending;
+  }
+
+  void _showFilterDialog() async {
+    await showDialog(context: context, builder: (context) {
+      return StatefulBuilder(
+        builder: (builder, setDialogState) => AlertDialog(
+          actions: [
+            FlatButton(
+              child: Text("Reset"),
+              onPressed: () {
+                setState(() {
+                  _resetFilters();
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text("Apply"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+          content: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Filter records",
+                    style: Theme.of(context).textTheme.headline5,
+                  ),
+                  Divider(),
+                  ListTile(
+                    title: Text("Players"),
+                    trailing: Text(
+                      playersSelected.values.any((element) => element == false) ? "some selected" : "all",
+                      style: Theme.of(context).textTheme.caption,
+                    ),
+                    onTap: () {
+                      showDialog(context: context, builder: (context) => StatefulBuilder(
+                        builder: (context, setDialogDialogState) => AlertDialog(
+                          content: SingleChildScrollView(
+                            child: Column(
+                              children:  widget.training.players.map((player) => CheckboxListTile(
+                                value: playersSelected[player],
+                                onChanged: (value) {
+                                  setDialogDialogState(() {
+                                    playersSelected[player] = value;
+                                    //check whether at least one item is selected
+                                    if(!playersSelected.values.any((element) => element == true)) {
+                                      playersSelected[player] = true;
+                                    }
+                                  });
+                                  setDialogState(() {});
+                                  setState(() {});
+                                },
+                                title: Text(player.name),
+                              )).toList(),
+                            ),
+                          ),
+                          actions: [
+                            FlatButton(
+                                child: Text("Reset"),
+                                onPressed: () {
+                                  setDialogState(() {
+                                    playersSelected = Map.fromEntries(widget.training.players.map((e) => MapEntry(e, true)));
+                                  });
+                                  Navigator.of(context).pop();
+                                }
+                            ),
+                            FlatButton(
+                              child: Text("Apply"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              }
+                            )
+                          ],
+                        ),
+                      ));
+                    },
+                  ),
+                  ListTile(
+                    title: Text("Actions"),
+                    trailing: Text(
+                      actionsSelected.values.any((element) => element == false) ? "some selected" : "all",
+                      style: Theme.of(context).textTheme.caption,
+                    ),
+                    onTap: () {
+                      showDialog(context: context, builder: (context) => StatefulBuilder(
+                        builder: (context, setDialogDialogState) => AlertDialog(
+                          content: SingleChildScrollView(
+                            child: Column(
+                              children:  widget.training.actions.map((action) => CheckboxListTile(
+                                value: actionsSelected[action],
+                                onChanged: (value) {
+                                  setDialogDialogState(() {
+                                    actionsSelected[action] = value;
+                                    //check whether at least one item is selected
+                                    if(!actionsSelected.values.any((element) => element == true)) {
+                                      actionsSelected[action] = true;
+                                    }
+                                  });
+                                  setDialogState(() {});
+                                  setState(() {});
+                                },
+                                title: Text(action.name),
+                              )).toList(),
+                            ),
+                          ),
+                          actions: [
+                            FlatButton(
+                                child: Text("Reset"),
+                                onPressed: () {
+                                  setDialogState(() {
+                                    actionsSelected = Map.fromEntries(widget.training.actions.map((e) => MapEntry(e, true)));
+                                  });
+                                  Navigator.of(context).pop();
+                                }
+                            ),
+                            FlatButton(
+                                child: Text("Apply"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                }
+                            )
+                          ],
+                        ),
+                      ));
+                    },
+                  ),
+                  ListTile(
+                    title: Text("Evaluations"),
+                    trailing: Text(
+                      evaluationsSelected.values.any((element) => element == false) ? "some selected" : "all",
+                      style: Theme.of(context).textTheme.caption,
+                    ),
+                    onTap: () {
+                      showDialog(context: context, builder: (context) => StatefulBuilder(
+                        builder: (context, setDialogDialogState) => AlertDialog(
+                          content: SingleChildScrollView(
+                            child: FutureBuilder(
+                              future: EvaluationProvider.getAll(),
+                              builder: (context, snap) => snap.hasData ? Column(
+                                children:  [3, 2, 1, -1, -2, -3].map((eval) => CheckboxListTile(
+                                  value: evaluationsSelected[eval],
+                                  onChanged: (value) {
+                                    setDialogDialogState(() {
+                                      evaluationsSelected[eval] = value;
+                                      //check whether at least one item is selected
+                                      if(!evaluationsSelected.values.any((element) => element == true)) {
+                                        evaluationsSelected[eval] = true;
+                                      }
+                                    });
+                                    setDialogState(() {});
+                                    setState(() {});
+                                  },
+                                  secondary: CircleAvatar(
+                                    backgroundColor: Evaluation.getColor(eval),
+                                  ),
+                                  title: Text(snap.data[eval]),
+                                )).toList(),
+                              ) : Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            )
+                          ),
+                          actions: [
+                            FlatButton(
+                                child: Text("Reset"),
+                                onPressed: () {
+                                  setDialogState(() {
+                                    evaluationsSelected = Map.fromEntries([-3, -2, -1, 1, 2, 3].map((e) => MapEntry(e, true)));
+                                  });
+                                  Navigator.of(context).pop();
+                                }
+                            ),
+                            FlatButton(
+                                child: Text("Apply"),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                }
+                            )
+                          ],
+                        ),
+                      ));
+                    },
+                  ),
+                  Divider(),
+                  ListTile(
+                    title: Text("Order by"),
+                    trailing: DropdownButton<OrderByWhat>(
+                      value: orderByWhat,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          orderByWhat = value;
+                        });
+                      },
+                      items: OrderByWhat.values.map((e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(
+                          e.name(),
+                          style: Theme.of(context).textTheme.caption,
+                        ),
+                      )).toList(),
+                    ),
+                  ),
+                  ListTile(
+                    title: Text("Order"),
+                    trailing: DropdownButton<OrderByOrder>(
+                      value: orderByOrder,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          orderByOrder = value;
+                        });
+                      },
+                      items: OrderByOrder.values.map((e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(
+                          e.name(),
+                          style: Theme.of(context).textTheme.caption,
+                        ),
+                      )).toList(),
+                    ),
+                  )
+                ],
+              ),
+            )
+          )
+        ),
+      );
+    });
+    await _refreshFilters();
+    await _refreshOrder();
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Builder(
-        builder: (context) {
-          if(_initialized) {
-            return GestureDetector(
-              onTap: () {
-                if(_buttonsVisible) {
-                  _buttonsTimer?.cancel();
-                  setState(() {
-                    _buttonsVisible = false;
-                  });
-                } else {
-                  setState(() {
-                    _buttonsVisible = true;
-                  });
-                  _resetButtonsTimer();
-                }
-              },
-              child: Stack(
-                alignment: Alignment.center,
-                clipBehavior: Clip.hardEdge,
-                fit: StackFit.passthrough,
-                children: [
-                  Align(
-                    alignment: Alignment.center,
-                    child: Builder(
-                      builder: (context) {
+    return WillPopScope(
+      onWillPop: () async {
+        if(_playlistOpen) {
 
-                        Size size = MediaQuery.of(context).size;
-                        double ratio = _controllers[_currentVideo].value.aspectRatio;
+          if(filteredRecords.length > 0) {
+            setState(() {
+              _playlistOpen = false;
+            });
+          } else {
+            _scaffoldKey.currentState.removeCurrentSnackBar();
+            _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("There should be something in the playlist!"), duration: Duration(seconds: 3),));
+          }
 
-                        double width, height;
+          return false;
+        }
 
-                        //I want the video to cover all the available space
-                        if(size.height*ratio < size.width) {
-                          width = size.width;
-                          height = width / ratio;
-                        } else {
-                          height = size.height;
-                          width = height * ratio;
-                        }
-
-                        return Container(
-                          width: width,
-                          height: height,
-                          child: AspectRatio(
-                            aspectRatio: _controllers[_currentVideo].value.aspectRatio,
-                            child: VideoPlayer(_controllers[_currentVideo]),
-                          ),
-                        );
-                      },
+        return true;
+      },
+      child: Scaffold(
+        body: Builder(
+          builder: (context) {
+            if(_initialized) {
+              return GestureDetector(
+                onTap: () {
+                  if(_buttonsVisible) {
+                    _buttonsTimer?.cancel();
+                    setState(() {
+                      _buttonsVisible = false;
+                    });
+                  } else {
+                    setState(() {
+                      _buttonsVisible = true;
+                    });
+                    _resetButtonsTimer();
+                  }
+                },
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.hardEdge,
+                  fit: StackFit.passthrough,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: _changingVideo ? Center(
+                        child: CircularProgressIndicator(),
+                      ) : Container(
+                        width: width,
+                        height: height,
+                        child: AspectRatio(
+                          aspectRatio: aspectRatio,
+                          child: _controller != null ? VideoPlayer(_controller) : Text("No record provided."),
+                        ),
+                      ),
                     ),
-                  ),
-                  AnimatedPositioned(
-                    duration: Duration(milliseconds: 200),
-                    bottom: _buttonsVisible ? 20.0 : -100.0,
-                    child: Container(
-                      width: MediaQuery.of(context).size.width,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          FutureBuilder(
-                            future: _controllers[_currentVideo].position,
-                            builder: (BuildContext context, AsyncSnapshot<Duration> durationSnap) {
-                              if(durationSnap.hasData) {
-
-                                if(durationSnap.data >= _controllers[_currentVideo].value.duration) {
-                                  _playing = false;
-                                }
-
-                                return Slider(
-                                  min: 0.0,
-                                  max: _controllers[_currentVideo].value.duration.inMilliseconds.toDouble(),
-                                  value: min(durationSnap.data.inMilliseconds.toDouble(), _controllers[_currentVideo].value.duration.inMilliseconds.toDouble()),
-                                  onChanged: (val) async {
-                                    _resetButtonsTimer();
-                                    await _controllers[_currentVideo].pause();
-                                    await _controllers[_currentVideo].seekTo(Duration(milliseconds: val.toInt()));
-                                    setState(() {});
-                                  },
-                                  onChangeEnd: (val) async {
-                                    if(_playing)
-                                      await _controllers[_currentVideo].play();
-                                  },
-                                );
-                              } else {
-                                return Container();
-                              }
-                            },
-                          ),
-                          Row(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                FlatButton(
-                                  padding: EdgeInsets.zero,
-                                  clipBehavior: Clip.hardEdge,
-                                  color: Colors.black38.withOpacity(0.8),
-                                  shape: CircleBorder(),
-                                  child: Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(10.0),
-                                        child: Icon(
-                                          Icons.arrow_back,
-                                          color: Colors.white,
-                                          size: 20.0,
-                                        ),
-                                      )
-                                  ),
-                                  onPressed: () {
-                                    _resetButtonsTimer();
-                                    _changeVideo(-1);
+                    AnimatedPositioned(
+                        duration: Duration(milliseconds: 200),
+                        bottom: _buttonsVisible ? 20.0 : -100.0,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if(!_changingVideo && _controller != null)
+                                FutureBuilder(
+                                  future: _controller.position,
+                                  builder: (BuildContext context, AsyncSnapshot<Duration> durationSnap) {
+                                    if(durationSnap.hasData) {
+                                      _currentPosition = durationSnap.data;
+                                      return Slider(
+                                        min: 0.0,
+                                        max: _controller.value.duration.inMilliseconds.toDouble(),
+                                        value: max(0.0, min(durationSnap.data.inMilliseconds.toDouble(), _controller.value.duration.inMilliseconds.toDouble())),
+                                        onChanged: (val) async {
+                                          _resetButtonsTimer();
+                                          await _controller.pause();
+                                          await _controller.seekTo(Duration(milliseconds: val.toInt()));
+                                          setState(() {});
+                                        },
+                                        onChangeEnd: (val) async {
+                                          if(_playing)
+                                            await _controller.play();
+                                        },
+                                      );
+                                    } else {
+                                      return Container();
+                                    }
                                   },
                                 ),
-                                FlatButton(
-                                  padding: EdgeInsets.zero,
-                                  clipBehavior: Clip.hardEdge,
-                                  color: Colors.black38.withOpacity(0.8),
-                                  shape: CircleBorder(),
-                                  child: Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(10.0),
-                                        child: Icon(
-                                          _playing ? Icons.pause : Icons.play_arrow,
-                                          color: Colors.white,
-                                          size: 30.0,
+                              Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: RaisedButton(
+                                        padding: EdgeInsets.zero,
+                                        clipBehavior: Clip.hardEdge,
+                                        color: Colors.black38.withOpacity(0.8),
+                                        shape: CircleBorder(),
+                                        child: Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(10.0),
+                                              child: Icon(
+                                                Icons.loop,
+                                                color: _looping ? Theme.of(context).primaryColor : Colors.white,
+                                                size: 20.0,
+                                              ),
+                                            )
                                         ),
-                                      )
-                                  ),
-                                  onPressed: () {
-                                    _resetButtonsTimer();
-
-                                    if(_playing)
-                                      _controllers[_currentVideo].pause();
-                                    else
-                                      _controllers[_currentVideo].play();
-
-                                    setState(() {
-                                      _playing = !_playing;
-                                    });
-                                  },
-                                ),
-                                FlatButton(
-                                  padding: EdgeInsets.zero,
-                                  clipBehavior: Clip.hardEdge,
-                                  color: Colors.black38.withOpacity(0.8),
-                                  shape: CircleBorder(),
-                                  child: Center(
-                                      child: Padding(
-                                        padding: EdgeInsets.all(10.0),
-                                        child: Icon(
-                                          Icons.arrow_forward,
-                                          color: Colors.white,
-                                          size: 20.0,
-                                        ),
-                                      )
-                                  ),
-                                  onPressed: () {
-                                    _resetButtonsTimer();
-                                    _changeVideo(1);
-                                  },
-                                ),
-                              ]
-                          ),
-                        ],
-                      ),
-                    )
-                  ),
-                  AnimatedPositioned(
-                    duration: Duration(milliseconds: 200),
-                    left: 0.0,
-                    top: _buttonsVisible ? 0.0 : -100.0,
-                    child: Container(
-                      padding: EdgeInsets.only(top: 20.0, bottom: 5.0),
-                      decoration: BoxDecoration(
-                        color: Colors.black38.withOpacity(0.6)
-                      ),
-                      width: MediaQuery.of(context).size.width,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(left:20.0),
-                            child: Container(
-                              height: 30.0,
-                              width: 30.0,
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Evaluation.getColor(widget.training.records[_currentVideo].evaluation)
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(left:20.0),
-                            child: Text(
-                              "${widget.training.records[_currentVideo].player.name}, ${widget.training.records[_currentVideo].action.name}",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15.0
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Container(),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(right: 10.0),
-                            child: PopupMenuButton<Options>(
-                              onSelected: _onOptionSelected,
-                              icon: Icon(
-                                Icons.more_vert,
-                                color: Colors.white,
-                              ),
-                              itemBuilder: (context) => [
-                                PopupMenuItem<Options>(
-                                  value: Options.filter,
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.only(right: 10.0),
-                                        child: Icon(Icons.filter_list),
+                                        onPressed: () {
+                                          _resetButtonsTimer();
+                                          setState(() {
+                                            _looping = !_looping;
+                                          });
+                                        },
                                       ),
-                                      Text("Filter")
-                                    ],
+                                    ),
+                                    Expanded(
+                                      child: RaisedButton(
+                                        padding: EdgeInsets.zero,
+                                        clipBehavior: Clip.hardEdge,
+                                        color: Colors.black38.withOpacity(0.8),
+                                        shape: CircleBorder(),
+                                        child: Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(10.0),
+                                              child: Icon(
+                                                Icons.arrow_back,
+                                                color: Colors.white,
+                                                size: 20.0,
+                                              ),
+                                            )
+                                        ),
+                                        onPressed: () {
+                                          _resetButtonsTimer();
+                                          _changeVideo(-1);
+                                        },
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: RaisedButton(
+                                        padding: EdgeInsets.zero,
+                                        clipBehavior: Clip.hardEdge,
+                                        color: Colors.black38.withOpacity(0.8),
+                                        shape: CircleBorder(),
+                                        child: Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(10.0),
+                                              child: Icon(
+                                                _playing ? Icons.pause : Icons.play_arrow,
+                                                color: Colors.white,
+                                                size: 30.0,
+                                              ),
+                                            )
+                                        ),
+                                        onPressed: () {
+                                          _resetButtonsTimer();
+
+                                          if(_playing)
+                                            _controller.pause();
+                                          else
+                                            _controller.play();
+
+                                          setState(() {
+                                            _playing = !_playing;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: RaisedButton(
+                                        padding: EdgeInsets.zero,
+                                        clipBehavior: Clip.hardEdge,
+                                        color: Colors.black38.withOpacity(0.8),
+                                        shape: CircleBorder(),
+                                        child: Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(10.0),
+                                              child: Icon(
+                                                Icons.arrow_forward,
+                                                color: Colors.white,
+                                                size: 20.0,
+                                              ),
+                                            )
+                                        ),
+                                        onPressed: () {
+                                          _resetButtonsTimer();
+                                          _changeVideo(1);
+                                        },
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: RaisedButton(
+                                        padding: EdgeInsets.zero,
+                                        clipBehavior: Clip.hardEdge,
+                                        color: Colors.black38.withOpacity(0.8),
+                                        shape: CircleBorder(),
+                                        child: Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(10.0),
+                                              child: Icon(
+                                                Icons.list,
+                                                color: Colors.white,
+                                                size: 20.0,
+                                              ),
+                                            )
+                                        ),
+                                        onPressed: () {
+                                          _resetButtonsTimer();
+                                          _openPlaylist();
+                                        },
+                                      ),
+                                    ),
+                                  ]
+                              ),
+                            ],
+                          ),
+                        )
+                    ),
+                    AnimatedPositioned(
+                        duration: Duration(milliseconds: 200),
+                        left: 0.0,
+                        top: _buttonsVisible ? 0.0 : -100.0,
+                        child: Container(
+                          padding: EdgeInsets.only(top: 20.0, bottom: 5.0),
+                          decoration: BoxDecoration(
+                              color: Colors.black38.withOpacity(0.6)
+                          ),
+                          width: MediaQuery.of(context).size.width,
+                          child: _currentRecord != null ? Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.only(left:20.0),
+                                child: Container(
+                                  height: 30.0,
+                                  width: 30.0,
+                                  decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Evaluation.getColor(_currentRecord.evaluation)
                                   ),
                                 ),
-                                PopupMenuItem<Options>(
-                                  value: Options.export,
-                                  child: Row(
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.only(right: 10.0),
-                                        child: Icon(Icons.share),
-                                      ),
-                                      Text("Share")
-                                    ],
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(left:20.0),
+                                child: Text(
+                                  "${_currentRecord.player.name}, ${_currentRecord.action.name}",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 15.0
                                   ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(right: 10.0),
+                                child: PopupMenuButton<Options>(
+                                  onSelected: _onOptionSelected,
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    color: Colors.white,
+                                  ),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem<Options>(
+                                      value: Options.filter,
+                                      child: Row(
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.only(right: 10.0),
+                                            child: Icon(Icons.filter_list),
+                                          ),
+                                          Text("Filter")
+                                        ],
+                                      ),
+                                    ),
+                                    PopupMenuItem<Options>(
+                                      value: Options.export,
+                                      child: Row(
+                                        children: [
+                                          Padding(
+                                            padding: EdgeInsets.only(right: 10.0),
+                                            child: Icon(Icons.share),
+                                          ),
+                                          Text("Share")
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              )
+                            ],
+                          ) : Container(),
+                        )
+                    ),
+                    AnimatedPositioned(
+                      top: _playlistOpen ? 0.0 : MediaQuery.of(context).size.height,
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.ease,
+                      child: Container(
+                          height: MediaQuery.of(context).size.height,
+                          width: MediaQuery.of(context).size.width,
+                          color: Colors.white,
+                          child: Scaffold(
+                            key: _scaffoldKey,
+                            appBar: AppBar(
+                              title: Text("Playlist"),
+                              actions: [
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.filter_list,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: _showFilterDialog,
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.share,
+                                    color: Colors.white,
+                                  )
                                 )
                               ],
                             ),
+                            body: filteredRecords.isEmpty ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text("You should rethink you choices..."),
+                                  FlatButton(
+                                    child: Text("Reset filters"),
+                                    onPressed: () async {
+                                      _resetFilters();
+                                      await _refreshFilters();
+                                      await _refreshOrder();
+                                      setState(() {});
+                                    },
+                                  )
+                                ],
+                              ),
+                            ) : ListView(
+//                              onReorder: _onReorderPlaylist,
+                              children: filteredRecords.map((record) => ListTile(
+                                key: ValueKey(record.id),
+                                leading: FutureBuilder(
+                                  future: thumbnails[record.id],
+                                  builder: (context, snap) => snap.hasData ? CircleAvatar(
+                                    backgroundColor: Colors.transparent,
+                                    backgroundImage: MemoryImage(snap.data)
+                                  ) : Container(
+                                    height: 40,
+                                    width: 40,
+                                    child: Center(
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                ),
+                                title: Text(record.player.name),
+                                subtitle: Row(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(right: 10.0),
+                                      child: Container(
+                                        width: 15.0,
+                                        height: 15.0,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Evaluation.getColor(record.evaluation)
+                                        ),
+                                      ),
+                                    ),
+                                    Text(record.action.name)
+                                  ],
+                                ),
+                                selected: _currentRecord == record,
+                                onTap: () {
+                                  _onRecordTapped(record);
+                                },
+                              )).toList(),
+                            ),
                           )
-                        ],
                       ),
                     )
-                  )
-                ],
-              ),
-            );
-          } else {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        },
-      )
+                  ],
+                ),
+              );
+            } else {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          },
+        ),
+      ),
     );
   }
 

@@ -25,7 +25,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:path/path.dart';
 
@@ -44,22 +43,28 @@ Future<T> loadingPopup<T>(BuildContext context, Future<T> ftr, [String title]) a
         ftr.then((T value) => Navigator.of(context).pop(value));
 
         if(title == null) {
-          return Center(
-            child: CircularProgressIndicator(),
+          return WillPopScope(
+            onWillPop: () async => false,
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
           );
         } else {
-          return SimpleDialog(
-            children: [
-              Row(
-                children: [
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    child: CircularProgressIndicator(),
-                  ),
-                  Text(title),
-                ],
-              )
-            ],
+          return WillPopScope(
+            onWillPop: () async => false,
+            child: SimpleDialog(
+              children: [
+                Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                    Text(title),
+                  ],
+                )
+              ],
+            ),
           );
         }
 

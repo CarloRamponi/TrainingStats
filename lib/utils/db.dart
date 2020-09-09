@@ -257,7 +257,12 @@ class DB {
       "Team" : await db.query('Team'),
       "PlayerTeam" : await db.query('PlayerTeam'),
       "Action" : await db.query('Action'),
-      "Training" : await db.query('Training'),
+      "Training" : (await db.query('Training')).map((e) {
+        //video won't be exported!
+        Map tmp = Map.from(e);
+        tmp['video'] = false;
+        return tmp;
+      }).toList(),
       "PlayerTraining" : await db.query('PlayerTraining'),
       "Record" : await db.query('Record'),
       "ActionTraining" : await db.query('ActionTraining'),

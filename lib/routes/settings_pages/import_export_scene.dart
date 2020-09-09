@@ -144,6 +144,7 @@ class _ImportExportSceneState extends State<ImportExportScene> {
       );
 
     } catch (e) {
+      print(e.toString());
       _scaffoldKey.currentState.removeCurrentSnackBar();
       _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Failed to generate export file"), duration: Duration(seconds: 3)));
     }
