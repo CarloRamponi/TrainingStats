@@ -71,7 +71,7 @@ class SettingsScene extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Scaffold(
-        drawer: MyDrawer(),
+        drawer: MyDrawer(activeSection: DrawerSection.SETTINGS,),
         appBar: AppBar(
           title: Text('Settings'),
         ),

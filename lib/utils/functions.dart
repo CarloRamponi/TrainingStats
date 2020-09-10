@@ -122,6 +122,13 @@ Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime end
 
 }
 
+Future<void> deleteClips(int id) async {
+  Directory documents = await getApplicationDocumentsDirectory();
+  String path = join(documents.path, "video_scout", id.toString());
+
+  return Directory(path).delete(recursive: true);
+}
+
 //Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime endTimeStamp, Training training) async {
 //
 //  Directory documents = await getApplicationDocumentsDirectory();

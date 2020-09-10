@@ -148,7 +148,7 @@ class _PlayersSceneState extends State<PlayersScene> {
       },
       child: Scaffold(
           key: scaffoldKey,
-          drawer: MyDrawer(),
+          drawer: MyDrawer(activeSection: DrawerSection.PLAYERS,),
           appBar: AppBar(
             leading: searching ? IconButton(
               icon: Icon(Icons.arrow_back),

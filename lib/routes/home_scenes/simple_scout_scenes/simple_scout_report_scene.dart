@@ -35,6 +35,7 @@ import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exp
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/touches_average.dart';
 import 'package:path/path.dart' as path;
 import 'package:pdf/widgets.dart' as pw;
+import 'package:training_stats/routes/home_scenes/video_scout_scenes/video_scout_report_scene.dart';
 import 'package:training_stats/utils/functions.dart';
 
 class SimpleScoutReportScene extends StatefulWidget{
@@ -95,10 +96,16 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
         Training t = Training(
           team: widget.training.team,
           players: widget.training.players,
-          actions: widget.training.actions
+          actions: widget.training.actions,
+          video: widget.training.video
         );
 
-        Navigator.of(context).pushReplacementNamed("/simple_scout/scout", arguments: t);
+        if(t.video) {
+          Navigator.of(context).pushReplacementNamed("/video_scout/scout", arguments: t);
+        } else {
+          Navigator.of(context).pushReplacementNamed("/simple_scout/scout", arguments: t);
+        }
+
         break;
       case ReportAction.delete:
 
@@ -227,6 +234,34 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if(widget.training.video)
+                Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: Card(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 3.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text("This is a video training"),
+                          ),
+                          RaisedButton(
+                            child: Text(
+                              "View clips",
+                              style: TextStyle(
+                                color: Colors.white
+                              ),
+                            ),
+                            color: Colors.green,
+                            onPressed: () {
+                              Navigator.of(context).pushNamed("/video_scout/report", arguments: widget.training);
+                            },
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: EdgeInsets.all(10.0),
                 child: Text(

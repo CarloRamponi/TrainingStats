@@ -16,12 +16,15 @@
  * 
  */
 
+import 'dart:io';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:training_stats/datatypes/action.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/team.dart';
 import 'package:training_stats/utils/db.dart';
+import 'package:training_stats/utils/functions.dart';
 
 class Training {
 
@@ -225,6 +228,7 @@ class TrainingProvider {
   }
 
   static Future<int> delete(int id) async {
+    deleteClips(id);
     return (await DB.instance).db.delete('Training', where: "id = ?", whereArgs: [id]);
   }
 

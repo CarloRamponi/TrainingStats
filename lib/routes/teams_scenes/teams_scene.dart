@@ -161,7 +161,7 @@ class _TeamsSceneState extends State<TeamsScene> {
   Widget build(BuildContext context) {
     return Scaffold(
         key: scaffoldKey,
-        drawer: MyDrawer(),
+        drawer: MyDrawer(activeSection: DrawerSection.TEAMS,),
         appBar: AppBar(
           title: Text("Your teams"),
         ),

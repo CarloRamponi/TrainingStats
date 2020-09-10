@@ -260,17 +260,6 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
     });
   }
 
-  void _onOptionSelected(Options option) async {
-    switch(option) {
-      case Options.export:
-        // TODO: Handle this case.
-        break;
-      case Options.filter:
-        // TODO: Handle this case.
-        break;
-    }
-  }
-
   void _changeVideo(int value) async {
     if(filteredRecords.length > 0) {
       await initController(filteredRecords[(max(
@@ -811,39 +800,12 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
                               ),
                               Padding(
                                 padding: EdgeInsets.only(right: 10.0),
-                                child: PopupMenuButton<Options>(
-                                  onSelected: _onOptionSelected,
-                                  icon: Icon(
-                                    Icons.more_vert,
-                                    color: Colors.white,
-                                  ),
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem<Options>(
-                                      value: Options.filter,
-                                      child: Row(
-                                        children: [
-                                          Padding(
-                                            padding: EdgeInsets.only(right: 10.0),
-                                            child: Icon(Icons.filter_list),
-                                          ),
-                                          Text("Filter")
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuItem<Options>(
-                                      value: Options.export,
-                                      child: Row(
-                                        children: [
-                                          Padding(
-                                            padding: EdgeInsets.only(right: 10.0),
-                                            child: Icon(Icons.share),
-                                          ),
-                                          Text("Share")
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                ),
+                                child: IconButton(
+                                  icon: Icon(Icons.clear),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                )
                               )
                             ],
                           ) : Container(),

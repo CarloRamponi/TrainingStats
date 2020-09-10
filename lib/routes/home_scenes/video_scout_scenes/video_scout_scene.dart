@@ -28,7 +28,6 @@ import 'package:training_stats/datatypes/board_type.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
-import 'package:training_stats/routes/home_scenes/video_scout_scenes/video_scout_report_scene.dart';
 import 'package:training_stats/utils/functions.dart';
 import 'package:training_stats/widgets/blinker.dart';
 import 'package:training_stats/widgets/evaluation_board.dart';
@@ -70,6 +69,7 @@ class _VideoScoutSceneState extends State<VideoScoutScene> {
   String filePath;
 
   bool videoPreviewFullScreen = false;
+  double videoPreviewSize = 150.0;
 
   @override
   void initState() {
@@ -134,11 +134,9 @@ class _VideoScoutSceneState extends State<VideoScoutScene> {
     if(records.length > 0) {
 
       training = await loadingPopup(context, TrainingProvider.create(training));
-
       bool result = await loadingPopup(context, createClips(filePath, videoTsStart, endTs, training), "Creating clips");
 
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => VideoScoutReportScene(training: training,)));
+      Navigator.pushReplacementNamed(context, '/simple_scout/report', arguments: training);
     } else {
       Navigator.of(context).pop();
     }
@@ -371,15 +369,16 @@ class _VideoScoutSceneState extends State<VideoScoutScene> {
                     },
                     child: AnimatedContainer(
                         duration: Duration(milliseconds: 500),
-                        height: videoPreviewFullScreen ? MediaQuery.of(context).size.height : 150.0,
+                        height: videoPreviewFullScreen ? MediaQuery.of(context).size.height : videoPreviewSize,
                         child: initialized ? Stack(
                           fit: StackFit.loose,
+                          clipBehavior: Clip.none,
                           children: [
                             Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.only(topRight: Radius.circular(videoPreviewFullScreen ? 0.0 : 5.0))
-                              ),
-                              clipBehavior: Clip.hardEdge,
+//                              decoration: BoxDecoration(
+//                                borderRadius: BorderRadius.only(topRight: Radius.circular(videoPreviewFullScreen ? 0.0 : 5.0))
+//                              ),
+//                              clipBehavior: Clip.hardEdge,
                               child: AspectRatio(
                                 aspectRatio: controller.value.aspectRatio,
                                 child: CameraPreview(controller),
@@ -409,7 +408,32 @@ class _VideoScoutSceneState extends State<VideoScoutScene> {
                                   ),
                                 )
                               ),
-                            )
+                            ),
+                            if(!videoPreviewFullScreen)
+                              Positioned(
+                                bottom: videoPreviewSize - 25.0,
+                                left: videoPreviewSize * controller.value.aspectRatio - 25.0,
+                                child: GestureDetector(
+                                  child: Card(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Icon(Icons.call_made),
+                                    ),
+                                    color: Colors.white,
+                                    shape: CircleBorder(),
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      videoPreviewFullScreen = !videoPreviewFullScreen;
+                                    });
+                                  },
+                                  onPanUpdate: (details) {
+                                    setState(() {
+                                      videoPreviewSize = min(max(videoPreviewSize - details.delta.dy, 100.0), MediaQuery.of(context).size.height - 100.0);
+                                    });
+                                  },
+                                ),
+                              )
                           ],
                         ) : Center(
                           child: CircularProgressIndicator(),

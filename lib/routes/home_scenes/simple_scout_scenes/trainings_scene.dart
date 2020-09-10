@@ -21,6 +21,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/team.dart';
 import 'package:training_stats/datatypes/training.dart';
@@ -72,10 +73,15 @@ class _SimpleScoutTrainingsSceneState extends State<SimpleScoutTrainingsScene> {
         Training tt = Training(
           team: training.team,
           players: training.players,
-          actions: training.actions
+          actions: training.actions,
+          video: training.video
         );
 
-        await Navigator.of(context).pushNamed('/simple_scout/scout', arguments: tt);
+        if(training.video) {
+          await Navigator.of(context).pushNamed('/video_scout/scout', arguments: tt);
+        } else {
+          await Navigator.of(context).pushNamed('/simple_scout/scout', arguments: tt);
+        }
         _refresh();
         break;
 
@@ -127,7 +133,7 @@ class _SimpleScoutTrainingsSceneState extends State<SimpleScoutTrainingsScene> {
     );
   }
 
-  void _newTraining() async {
+  void _newTraining({bool video = false}) async {
 
     Team team = await Navigator.push(context, MaterialPageRoute<Team>(
         builder: (context) => SelectTeam()
@@ -148,13 +154,19 @@ class _SimpleScoutTrainingsSceneState extends State<SimpleScoutTrainingsScene> {
 
         if(actions != null) {
           Training training = Training(
-              team: team,
-              players: players,
-              actions: actions
+            team: team,
+            players: players,
+            actions: actions,
+            video: video
           );
 
-          await Navigator.of(context).pushNamed(
-              "/simple_scout/scout", arguments: training);
+          if(video) {
+            await Navigator.of(context).pushNamed(
+                "/video_scout/scout", arguments: training);
+          } else {
+            await Navigator.of(context).pushNamed(
+                "/simple_scout/scout", arguments: training);
+          }
         }
       }
     }
@@ -170,13 +182,28 @@ class _SimpleScoutTrainingsSceneState extends State<SimpleScoutTrainingsScene> {
   Widget build(BuildContext context) {
     return Scaffold(
             key: scaffoldKey,
-            drawer: MyDrawer(),
+            drawer: MyDrawer(activeSection: DrawerSection.HOME,),
             appBar: AppBar(
               title: Text("Trainings"),
             ),
-            floatingActionButton: FloatingActionButton(
-              child: Icon(Icons.add),
-              onPressed: _newTraining,
+            floatingActionButton: SpeedDial(
+              animatedIcon: AnimatedIcons.menu_close,
+              children: [
+                SpeedDialChild(
+                  child: Icon(Icons.videocam_off),
+                  label: "Simple scout",
+                  onTap: () {
+                    _newTraining();
+                  }
+                ),
+                SpeedDialChild(
+                    child: Icon(Icons.videocam),
+                    label: "Video scout",
+                    onTap: () {
+                      _newTraining(video: true);
+                    }
+                )
+              ],
             ),
             body: SafeArea(
                 child: FutureBuilder(
@@ -191,7 +218,21 @@ class _SimpleScoutTrainingsSceneState extends State<SimpleScoutTrainingsScene> {
                                 GlobalKey<PopupMenuButtonState>();
                                 Training current = snap.data[index];
                                 return ListTile(
-                                  title: Text(
+                                  title: current.video ? Row(
+                                    children: [
+                                      Padding(
+                                        padding: EdgeInsets.only(right: 5.0),
+                                        child: Icon(
+                                          Icons.videocam,
+                                          size: 20.0,
+                                        ),
+                                      ),
+                                      Text(
+                                        DateFormat("d/M/y").format(current.ts_start) + " - " + current.team.teamName,
+                                        overflow: TextOverflow.ellipsis,
+                                      )
+                                    ],
+                                  ) : Text(
                                     DateFormat("d/M/y").format(current.ts_start) + " - " + current.team.teamName,
                                     overflow: TextOverflow.ellipsis,
                                   ),

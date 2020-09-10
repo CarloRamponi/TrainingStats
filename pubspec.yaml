@@ -46,6 +46,7 @@ dependencies:
   video_player:
   video_thumbnail: ^0.2.2
   fluttertoast: ^7.0.4
+  flutter_speed_dial: ^1.2.5
 
 dev_dependencies:
   flutter_test:

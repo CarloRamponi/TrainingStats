@@ -19,6 +19,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:training_stats/datatypes/score_keeper_config.dart';
+import 'package:training_stats/widgets/drawer.dart';
 
 class ScoreKeeperConfigScene extends StatefulWidget {
 
@@ -42,7 +43,7 @@ class _ScoreKeeperConfigSceneState extends State<ScoreKeeperConfigScene> {
   void _doneConfiguring() async {
     if(_formState.currentState.validate()) {
       await config.update();
-      Navigator.of(context).pushReplacementNamed("/score_keeper/main", arguments: config);
+      Navigator.of(context).pushNamed("/score_keeper/main", arguments: config);
     }
   }
 
@@ -67,6 +68,7 @@ class _ScoreKeeperConfigSceneState extends State<ScoreKeeperConfigScene> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: MyDrawer(activeSection: DrawerSection.SCORE_KEEPER,),
       appBar: AppBar(
         title: Text("Score keeper"),
         actions: [
@@ -161,6 +163,14 @@ class _ScoreKeeperConfigSceneState extends State<ScoreKeeperConfigScene> {
                           },
                           title: Text("Points can be negative"),
                         ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FlatButton(
+                            child: Text("Start"),
+                            textColor: Colors.green,
+                            onPressed: _doneConfiguring,
+                          ),
+                        )
                       ],
                     )
                 ),

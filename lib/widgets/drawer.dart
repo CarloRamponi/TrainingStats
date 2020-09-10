@@ -21,7 +21,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+enum DrawerSection {
+  HOME,
+  SCORE_KEEPER,
+  TEAMS,
+  PLAYERS,
+  SETTINGS,
+  INFO
+}
+
 class MyDrawer extends StatelessWidget {
+
+  DrawerSection activeSection;
+
+  MyDrawer({this.activeSection});
 
   @override
   Widget build(BuildContext context) {
@@ -41,41 +54,68 @@ class MyDrawer extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.home),
             title: Text("Home"),
-            onTap: () {
+            onTap: activeSection == DrawerSection.HOME ? () {
+              Navigator.of(context).pop();
+            } : () {
               Navigator.of(context).pop();
               Navigator.of(context).pushReplacementNamed("/");
             },
+            selected: activeSection == DrawerSection.HOME,
+          ),
+          ListTile(
+            leading: Icon(Icons.score),
+            title: Text("Score keeper"),
+            onTap: activeSection == DrawerSection.SCORE_KEEPER ? () {
+              Navigator.of(context).pop();
+            } : () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacementNamed("/score_keeper");
+            },
+            selected: activeSection == DrawerSection.SCORE_KEEPER,
           ),
           ListTile(
             leading: Icon(Icons.people),
             title: Text("Teams"),
-            onTap: () {
+            onTap: activeSection == DrawerSection.TEAMS ? () {
+              Navigator.of(context).pop();
+            } : () {
               Navigator.of(context).pop();
               Navigator.of(context).pushReplacementNamed("/teams");
             },
+            selected: activeSection == DrawerSection.TEAMS,
           ),
           ListTile(
             leading: Icon(Icons.person),
             title: Text("Players"),
-            onTap: () {
+            onTap: activeSection == DrawerSection.PLAYERS ? () {
+              Navigator.of(context).pop();
+            } : () {
               Navigator.of(context).pop();
               Navigator.of(context).pushReplacementNamed("/players");
             },
+            selected: activeSection == DrawerSection.PLAYERS,
           ),
           ListTile(
             leading: Icon(Icons.settings),
             title: Text("Settings"),
-            onTap: () {
+            onTap: activeSection == DrawerSection.SETTINGS ? () {
+              Navigator.of(context).pop();
+            } : () {
               Navigator.of(context).pop();
               Navigator.of(context).pushReplacementNamed("/settings");
             },
+            selected: activeSection == DrawerSection.SETTINGS,
           ),
           ListTile(
             leading: Icon(Icons.info),
             title: Text("About"),
-            onTap: () {
+            onTap: activeSection == DrawerSection.INFO ? () {
+              Navigator.of(context).pop();
+            } : () {
+              Navigator.of(context).pop();
               Navigator.of(context).pushNamed("/settings/about");
             },
+            selected: activeSection == DrawerSection.INFO,
           ),
         ],
       ),

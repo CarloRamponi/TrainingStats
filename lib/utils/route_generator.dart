@@ -20,13 +20,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:training_stats/routes/home_scenes/home_scene.dart';
 import 'package:training_stats/routes/home_scenes/score_keeper_scenes/score_keeper_config_scene.dart';
 import 'package:training_stats/routes/home_scenes/score_keeper_scenes/score_keeper_scene.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/simple_scout_report_scene.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/simple_scout_scene.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/trainings_scene.dart';
-import 'package:training_stats/routes/home_scenes/video_scout_scenes/trainings_scene.dart';
 import 'package:training_stats/routes/home_scenes/video_scout_scenes/video_scout_report_scene.dart';
 import 'package:training_stats/routes/home_scenes/video_scout_scenes/video_scout_scene.dart';
 import 'package:training_stats/routes/players_scenes/create_player_scene.dart';
@@ -57,7 +55,7 @@ class RouteGenerator {
 
         return MaterialPageRoute(
           builder: (_) {
-            return HomeScene();
+            return SimpleScoutTrainingsScene();
           });
 
         break;
@@ -137,16 +135,6 @@ class RouteGenerator {
 
         break;
 
-      case '/simple_scout':
-
-        return MaterialPageRoute(
-            builder: (_) {
-              return SimpleScoutTrainingsScene();
-            }
-        );
-
-        break;
-
       case '/simple_scout/scout':
 
           return MaterialPageRoute(
@@ -166,16 +154,6 @@ class RouteGenerator {
               return SimpleScoutReportScene(
                   training: args
               );
-            }
-        );
-
-        break;
-
-      case '/video_scout':
-
-        return MaterialPageRoute(
-            builder: (_) {
-              return VideoScoutTrainingsScene();
             }
         );
 
