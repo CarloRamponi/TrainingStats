@@ -18,6 +18,7 @@
 
 import 'dart:io';
 
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:training_stats/datatypes/action.dart';
 import 'package:training_stats/datatypes/player.dart';
@@ -25,6 +26,7 @@ import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/team.dart';
 import 'package:training_stats/utils/db.dart';
 import 'package:training_stats/utils/functions.dart';
+import 'package:path/path.dart';
 
 class Training {
 
@@ -107,6 +109,11 @@ class Training {
     }
 
     return ret;
+  }
+
+  static Future<String> getVideoDirectoryPath(int id) async {
+    Directory documents = await getApplicationDocumentsDirectory();
+    return join(documents.path, "video_scout", id.toString());
   }
 
 }
@@ -228,7 +235,7 @@ class TrainingProvider {
   }
 
   static Future<int> delete(int id) async {
-    deleteClips(id);
+    await deleteClips(id);
     return (await DB.instance).db.delete('Training', where: "id = ?", whereArgs: [id]);
   }
 
@@ -248,6 +255,18 @@ class TrainingProvider {
 
     return ret;
 
+  }
+
+  static Future<Training> removeVideo(Training training) async {
+    await deleteClips(training.id);
+    await (await DB.instance).db.update('Training', {'video' : 0}, where: 'id = ?', whereArgs: [training.id]);
+    training.video = false;
+    return training;
+  }
+
+  static Future<void> deleteClips(int id) async {
+    String path = await Training.getVideoDirectoryPath(id);
+    await Directory(path).delete(recursive: true);
   }
 
 }

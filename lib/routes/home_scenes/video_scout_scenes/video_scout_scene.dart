@@ -133,11 +133,12 @@ class _VideoScoutSceneState extends State<VideoScoutScene> {
 
     if(records.length > 0) {
 
-      training = await loadingPopup(context, TrainingProvider.create(training));
+      training = await loadingPopup(context, TrainingProvider.create(training), "Creating training's report");
       bool result = await loadingPopup(context, createClips(filePath, videoTsStart, endTs, training), "Creating clips");
 
       Navigator.pushReplacementNamed(context, '/simple_scout/report', arguments: training);
     } else {
+      await loadingPopup(context, File(filePath).delete(), "Deleting video file");
       Navigator.of(context).pop();
     }
 

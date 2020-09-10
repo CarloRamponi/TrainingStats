@@ -96,7 +96,7 @@ Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime end
 
   Directory documents = await getApplicationDocumentsDirectory();
 
-  String path = join(documents.path, "video_scout", training.id.toString());
+  String path = await Training.getVideoDirectoryPath(training.id);
   Directory(path).createSync(recursive: true);
 
   FlutterFFmpeg flutterFFmpeg = new FlutterFFmpeg();
@@ -120,13 +120,6 @@ Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime end
 
   return true;
 
-}
-
-Future<void> deleteClips(int id) async {
-  Directory documents = await getApplicationDocumentsDirectory();
-  String path = join(documents.path, "video_scout", id.toString());
-
-  return Directory(path).delete(recursive: true);
 }
 
 //Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime endTimeStamp, Training training) async {

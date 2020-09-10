@@ -29,6 +29,7 @@ import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
+import 'package:training_stats/routes/home_scenes/video_scout_scenes/export_videos_scene.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path/path.dart' as p;
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -105,8 +106,8 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
   @override
   void initState() {
 
-    getApplicationDocumentsDirectory()..then((value) {
-      path = p.join(value.path, "video_scout", widget.training.id.toString());
+    Training.getVideoDirectoryPath(widget.training.id).then((value) {
+      path = value;
       widget.training.loadRecords().then((value) {
 
         playersSelected = Map.fromEntries(widget.training.players.map((e) => MapEntry(e, true)));
@@ -302,6 +303,13 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
     evaluationsSelected = Map.fromEntries([-3, -2, -1, 1, 2, 3].map((e) => MapEntry(e, true)));
     orderByWhat = OrderByWhat.Time;
     orderByOrder = OrderByOrder.Ascending;
+  }
+
+  void _showExportDialog() async {
+    List<Record> exportingRecords = await Navigator.push(context, MaterialPageRoute<List<Record>>(builder: (context) => ExportVideosScene(records: filteredRecords,)));
+    if(exportingRecords != null) {
+      //todo export records.
+    }
   }
 
   void _showFilterDialog() async {
@@ -835,7 +843,8 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
                                   icon: Icon(
                                     Icons.share,
                                     color: Colors.white,
-                                  )
+                                  ),
+                                  onPressed: _showExportDialog,
                                 )
                               ],
                             ),
@@ -864,13 +873,13 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
                                   builder: (context, snap) => snap.hasData ? CircleAvatar(
                                     backgroundColor: Colors.transparent,
                                     backgroundImage: MemoryImage(snap.data)
-                                  ) : Container(
-                                    height: 40,
-                                    width: 40,
-                                    child: Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  ),
+                                  ) : CircleAvatar(
+                                      backgroundColor: Colors.grey.withOpacity(0.2),
+                                      foregroundColor: Theme.of(context).primaryColor,
+                                      child: Center(
+                                        child: Icon(Icons.image),
+                                      ),
+                                  )
                                 ),
                                 title: Text(record.player.name),
                                 subtitle: Row(

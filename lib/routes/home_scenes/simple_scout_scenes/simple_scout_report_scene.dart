@@ -55,6 +55,7 @@ enum ReportAction {
   clone,
   delete,
   export,
+  delete_clips
 }
 
 class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
@@ -82,6 +83,23 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
         ),
         FlatButton(
           child: Text("Delete"),
+          onPressed: () => Navigator.of(context).pop(true),
+        )
+      ],
+    ));
+  }
+
+  Future<bool> _confirmDeleteClips() {
+    return showDialog(context: context, builder: (context) => AlertDialog(
+      title: Text("Are you sure?"),
+      content: Text("This action cannot be undone.\nAll clips in this training session will be deleted from this device.\nYou may want to export them first!\nThe training will not be deleted."),
+      actions: [
+        FlatButton(
+          child: Text("Cancel"),
+          onPressed: () => Navigator.of(context).pop(null),
+        ),
+        FlatButton(
+          child: Text("Delete clips"),
           onPressed: () => Navigator.of(context).pop(true),
         )
       ],
@@ -117,6 +135,17 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
         break;
       case ReportAction.export:
         _showExportPopUp();
+        break;
+
+      case ReportAction.delete_clips:
+        if(widget.training.video) {
+
+          if(await _confirmDeleteClips()) {
+            Training t = await loadingPopup<Training>(context, TrainingProvider.removeVideo(widget.training));
+            Navigator.of(context).pushReplacementNamed("/simple_scout/report", arguments: t);
+          }
+
+        }
         break;
     }
   }
@@ -221,7 +250,23 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
                     Text("Delete")
                   ],
                 ),
-              )
+              ),
+              if(widget.training.video)
+                PopupMenuItem<ReportAction>(
+                  value: ReportAction.delete_clips,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(right: 10.0),
+                        child: Icon(
+                          Icons.videocam_off,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text("Delete clips")
+                    ],
+                  ),
+                )
             ],
             onSelected: _popUpMenuHandler,
           )
