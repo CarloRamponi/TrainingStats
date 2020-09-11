@@ -16,14 +16,21 @@
  *
  */
 
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/record.dart';
 
 class ExportVideosScene extends StatefulWidget {
 
   final List<Record> records;
+  final Map<int, Future<Uint8List>> thumbnails;
 
-  ExportVideosScene({@required this.records});
+  ExportVideosScene({
+    @required this.records,
+    @required this.thumbnails
+  });
 
   @override
   _ExportVideosSceneState createState() =>_ExportVideosSceneState();
@@ -88,7 +95,37 @@ class _ExportVideosSceneState extends State<ExportVideosScene> {
 //                records.insert(index, record);
             });
           },
+          secondary: FutureBuilder(
+            key: ValueKey(record.id),
+            future: widget.thumbnails[record.id],
+            builder: (context, snap) => snap.hasData ? CircleAvatar(
+                backgroundColor: Colors.transparent,
+                backgroundImage: MemoryImage(snap.data)
+            ) : CircleAvatar(
+              backgroundColor: Colors.grey.withOpacity(0.2),
+              foregroundColor: Theme.of(context).primaryColor,
+              child: Center(
+                child: Icon(Icons.image),
+              ),
+            )
+          ),
           title: Text(record.player.name),
+          subtitle: Row(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(right: 10.0),
+                child: Container(
+                  width: 15.0,
+                  height: 15.0,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Evaluation.getColor(record.evaluation)
+                  ),
+                ),
+              ),
+              Text(record.action.name)
+            ],
+          ),
         )).toList(),
       ),
     );

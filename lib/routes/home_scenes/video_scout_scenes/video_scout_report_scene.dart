@@ -22,6 +22,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_share/flutter_share.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:training_stats/datatypes/action.dart' as TSA;
@@ -30,6 +31,7 @@ import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/routes/home_scenes/video_scout_scenes/export_videos_scene.dart';
+import 'package:training_stats/utils/functions.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path/path.dart' as p;
 import 'package:video_thumbnail/video_thumbnail.dart';
@@ -306,9 +308,15 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
   }
 
   void _showExportDialog() async {
-    List<Record> exportingRecords = await Navigator.push(context, MaterialPageRoute<List<Record>>(builder: (context) => ExportVideosScene(records: filteredRecords,)));
+    List<Record> exportingRecords = await Navigator.push(context, MaterialPageRoute<List<Record>>(builder: (context) => ExportVideosScene(records: filteredRecords, thumbnails: thumbnails,)));
     if(exportingRecords != null) {
-      //todo export records.
+      String filePath = await loadingPopupWithProgress<String>(context, (onProgress) => exportClips(widget.training.id, exportingRecords, onProgress), "Generating video...\nCould take some time");
+      if(filePath != null) {
+        FlutterShare.shareFile(title: "video.mp4", filePath: filePath);
+      } else {
+        _scaffoldKey.currentState.removeCurrentSnackBar();
+        _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text("Unable to generate video..."),));
+      }
     }
   }
 
@@ -809,7 +817,10 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
                               Padding(
                                 padding: EdgeInsets.only(right: 10.0),
                                 child: IconButton(
-                                  icon: Icon(Icons.clear),
+                                  icon: Icon(
+                                    Icons.clear,
+                                    color: Colors.white,
+                                  ),
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },

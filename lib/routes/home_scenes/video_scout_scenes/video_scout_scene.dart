@@ -134,7 +134,7 @@ class _VideoScoutSceneState extends State<VideoScoutScene> {
     if(records.length > 0) {
 
       training = await loadingPopup(context, TrainingProvider.create(training), "Creating training's report");
-      bool result = await loadingPopup(context, createClips(filePath, videoTsStart, endTs, training), "Creating clips");
+      bool result = await loadingPopupWithProgress<bool>(context, (onProgress) => createClips(filePath, videoTsStart, endTs, training, onProgress), "Creating clips");
 
       Navigator.pushReplacementNamed(context, '/simple_scout/report', arguments: training);
     } else {

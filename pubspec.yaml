@@ -42,7 +42,7 @@ dependencies:
   pdf: 1.11.0
   csv: 4.0.3
   camera: 0.5.8+5
-  flutter_ffmpeg: ^0.2.10
+  flutter_ffmpeg: 0.2.10
   video_player:
   video_thumbnail: ^0.2.2
   fluttertoast: ^7.0.4
