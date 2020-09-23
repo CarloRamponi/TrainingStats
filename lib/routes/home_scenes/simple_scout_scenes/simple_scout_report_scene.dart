@@ -69,6 +69,7 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
   @override
   void initState() {
     loadingRecords = widget.training.loadRecords()..then((value) => statistics = Statistics(widget.training));
+
     super.initState();
   }
 

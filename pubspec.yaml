@@ -47,6 +47,8 @@ dependencies:
   video_thumbnail: ^0.2.2
   fluttertoast: ^7.0.4
   flutter_speed_dial: ^1.2.5
+  image: 2.1.17
+  tuple: 1.0.3
 
 dev_dependencies:
   flutter_test:
@@ -67,13 +69,6 @@ flutter:
   assets:
     - assets/LICENSE.md
     - assets/img/icon.png
-    - assets/img/video_overlays/-3.png
-    - assets/img/video_overlays/-2.png
-    - assets/img/video_overlays/-1.png
-    - assets/img/video_overlays/1.png
-    - assets/img/video_overlays/2.png
-    - assets/img/video_overlays/3.png
-    - assets/fonts/Roboto-Regular.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

@@ -293,7 +293,7 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
   }
 
   void _showExportDialog() async {
-    List<Record> exportingRecords = await Navigator.push(context, MaterialPageRoute<List<Record>>(builder: (context) => ExportVideosScene(records: filteredRecords)));
+    List<Record> exportingRecords = await Navigator.push(context, MaterialPageRoute<List<Record>>(builder: (context) => ExportVideosScene(records: filteredRecords, trainingId: widget.training.id,)));
     if(exportingRecords != null) {
       String filePath = await loadingPopupWithProgress<String>(context, (onProgress) => exportClips(widget.training.id, exportingRecords, onProgress), "Generating video...\nCould take some time");
       if(filePath != null) {
