@@ -16,20 +16,22 @@
  *
  */
 
-import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/record.dart';
+import 'package:training_stats/datatypes/training.dart';
 
 class ExportVideosScene extends StatefulWidget {
 
+  final int trainingId;
   final List<Record> records;
-  final Map<int, Future<Uint8List>> thumbnails;
 
   ExportVideosScene({
-    @required this.records,
-    @required this.thumbnails
+    @required this.trainingId,
+    @required this.records
   });
 
   @override
@@ -41,12 +43,17 @@ class _ExportVideosSceneState extends State<ExportVideosScene> {
   List<Record> records;
   Map<Record, bool> selected;
 
+  Future<String> clipsPath;
+
   GlobalKey<ScaffoldState> _scaffold = GlobalKey();
 
   @override
   void initState() {
     records = List.from(widget.records);
     selected = Map.fromEntries(records.map((e) => MapEntry(e, true)));
+
+    clipsPath = Training.getVideoDirectoryPath(widget.trainingId);
+
     super.initState();
   }
 
@@ -55,7 +62,7 @@ class _ExportVideosSceneState extends State<ExportVideosScene> {
       _scaffold.currentState.removeCurrentSnackBar();
       _scaffold.currentState.showSnackBar(SnackBar(content: Text("You should select al least one clip!"),));
     } else {
-      Navigator.of(context).pop(records.where((element) => selected[element]).toList());
+      Navigator.of(this.context).pop(records.where((element) => selected[element]).toList());
     }
   }
 
@@ -97,10 +104,10 @@ class _ExportVideosSceneState extends State<ExportVideosScene> {
           },
           secondary: FutureBuilder(
             key: ValueKey(record.id),
-            future: widget.thumbnails[record.id],
+            future: clipsPath,
             builder: (context, snap) => snap.hasData ? CircleAvatar(
                 backgroundColor: Colors.transparent,
-                backgroundImage: MemoryImage(snap.data)
+                backgroundImage: FileImage(File(join(snap.data, "thumbnail_" + record.id.toString() + ".jpg")))
             ) : CircleAvatar(
               backgroundColor: Colors.grey.withOpacity(0.2),
               foregroundColor: Theme.of(context).primaryColor,

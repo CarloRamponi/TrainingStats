@@ -19,12 +19,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_share/flutter_share.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:training_stats/datatypes/action.dart' as TSA;
 import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/player.dart';
@@ -34,7 +31,6 @@ import 'package:training_stats/routes/home_scenes/video_scout_scenes/export_vide
 import 'package:training_stats/utils/functions.dart';
 import 'package:video_player/video_player.dart';
 import 'package:path/path.dart' as p;
-import 'package:video_thumbnail/video_thumbnail.dart';
 
 class VideoScoutReportScene extends StatefulWidget {
 
@@ -93,8 +89,6 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
 
   bool _playlistOpen = false;
 
-  Map<int, Future<Uint8List>> thumbnails;
-
 
   Map<Player, bool> playersSelected;
   Map<TSA.Action, bool> actionsSelected;
@@ -117,15 +111,6 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
         evaluationsSelected = Map.fromEntries([-3, -2, -1, 1, 2, 3].map((e) => MapEntry(e, true)));
 
         filteredRecords = widget.training.records;
-
-        thumbnails = Map.fromEntries(filteredRecords.map((record) => MapEntry(
-          record.id,
-          VideoThumbnail.thumbnailData(
-              video: p.join(path, record.id.toString() + ".mp4"),
-              quality: 75,
-              timeMs: 3000
-          )
-        )));
 
         _currentRecord = filteredRecords.first;
 
@@ -308,7 +293,7 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
   }
 
   void _showExportDialog() async {
-    List<Record> exportingRecords = await Navigator.push(context, MaterialPageRoute<List<Record>>(builder: (context) => ExportVideosScene(records: filteredRecords, thumbnails: thumbnails,)));
+    List<Record> exportingRecords = await Navigator.push(context, MaterialPageRoute<List<Record>>(builder: (context) => ExportVideosScene(records: filteredRecords)));
     if(exportingRecords != null) {
       String filePath = await loadingPopupWithProgress<String>(context, (onProgress) => exportClips(widget.training.id, exportingRecords, onProgress), "Generating video...\nCould take some time");
       if(filePath != null) {
@@ -879,18 +864,18 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
 //                              onReorder: _onReorderPlaylist,
                               children: filteredRecords.map((record) => ListTile(
                                 key: ValueKey(record.id),
-                                leading: FutureBuilder(
-                                  future: thumbnails[record.id],
-                                  builder: (context, snap) => snap.hasData ? CircleAvatar(
-                                    backgroundColor: Colors.transparent,
-                                    backgroundImage: MemoryImage(snap.data)
-                                  ) : CircleAvatar(
+                                leading: Builder(
+                                    key: ValueKey(record.id),
+                                    builder: (context) => _initialized? CircleAvatar(
+                                        backgroundColor: Colors.transparent,
+                                        backgroundImage: FileImage(File(p.join(path, "thumbnail_" + record.id.toString() + ".jpg")))
+                                    ) : CircleAvatar(
                                       backgroundColor: Colors.grey.withOpacity(0.2),
                                       foregroundColor: Theme.of(context).primaryColor,
                                       child: Center(
                                         child: Icon(Icons.image),
                                       ),
-                                  )
+                                    )
                                 ),
                                 title: Text(record.player.name),
                                 subtitle: Row(

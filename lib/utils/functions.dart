@@ -18,8 +18,10 @@
 
 
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +30,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:path/path.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 List<List<T>> chunk<T>(List<T> lst, int size) {
   return List.generate((lst.length / size).ceil(),
@@ -104,7 +107,17 @@ Future<T> loadingPopupWithProgress<T>(BuildContext context, Future<T> Function(v
                 children: [
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
-                    child: Text(title),
+                    child: Row(
+                      children: [
+                        Text(title),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Text("${(progress * 100).ceil().toString()}%"),
+                          ),
+                        )
+                      ],
+                    ),
                   ),
                   Padding(
                     padding: EdgeInsets.symmetric(vertical: 3.0, horizontal: 10.0),
@@ -151,19 +164,36 @@ Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime end
   double progress = 0.0;
 
   for(Record r in training.records) {
+
+    String clipPath = join(path, r.id.toString() + ".mp4");
+    String thumbnailPath = join(path, "thumbnail_" + r.id.toString() + ".jpg");
+
+    //cut out the clip from the original video
     int res = await flutterFFmpeg.executeWithArguments([
       "-i", videoPath,
       "-ss", printDuration(maxDuration(r.timestamp.difference(startTimeStamp) - Duration(seconds: 3), Duration.zero)),
       "-to", printDuration(minDuration(r.timestamp.difference(startTimeStamp) + Duration(seconds: 2), endTimeStamp.difference(startTimeStamp))),
       "-c", "copy",
-      join(path, r.id.toString() + ".mp4")
+      clipPath
     ]);
 
     if(res != 0) {
       return false;
     }
 
-    progress += 1.0 / (training.records.length);
+    progress += 1.0 / (training.records.length * 2);
+    onProgress(progress);
+
+    //save a thumbnail image
+    Uint8List thumbnailData = await VideoThumbnail.thumbnailData(
+      video: clipPath,
+      timeMs: 3000,
+      quality: 75
+    );
+
+    File(thumbnailPath).writeAsBytesSync(thumbnailData.toList());
+
+    progress += 1.0 / (training.records.length * 2);
     onProgress(progress);
   }
 
