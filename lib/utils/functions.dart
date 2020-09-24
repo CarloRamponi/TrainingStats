@@ -322,14 +322,14 @@ Future<bool> createOverlayImage(String path, Record record, int width, int heigh
   Tuple2<int, int> stringSize = calculateImageStringSize(playerString, image.arial_48);
   image.Image titleImage = image.Image(stringSize.item1, stringSize.item2);
   image.drawString(titleImage, image.arial_48, 0, 0, playerString);
-  int dstWidth = stringHeight ~/ stringSize.item2 * stringSize.item1;
+  int dstWidth = (stringHeight / stringSize.item2 * stringSize.item1).toInt();
   image.drawImage(overlay, titleImage, dstX: padding + circleRadius*2 + padding, dstY: padding + (circleRadius*2 - stringHeight)~/2, dstH: stringHeight, dstW: dstWidth);
 
   String tsString = "Training Stats";
   Tuple2<int, int> tsStringSize = calculateImageStringSize(tsString, image.arial_48);
   image.Image tsImage = image.Image(tsStringSize.item1, tsStringSize.item2);
   image.drawString(tsImage, image.arial_48, 0, 0, tsString);
-  dstWidth = stringHeight ~/ tsStringSize.item2 * tsStringSize.item1;
+  dstWidth = (stringHeight / tsStringSize.item2 * tsStringSize.item1).toInt();
   image.drawImage(overlay, tsImage, dstX: width - padding - logoSize - padding - dstWidth, dstY: height - padding - (logoSize - (logoSize - stringHeight)~/2), dstH: stringHeight, dstW: dstWidth);
 
   File(path).writeAsBytesSync(image.encodePng(overlay));
