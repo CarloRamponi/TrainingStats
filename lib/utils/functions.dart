@@ -25,6 +25,9 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
+import 'package:flutter_ffmpeg/log_level.dart';
+import 'package:flutter_ffmpeg/media_information.dart';
+import 'package:flutter_ffmpeg/statistics.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:training_stats/datatypes/evaluation.dart';
@@ -164,10 +167,8 @@ Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime end
   Directory(path).createSync(recursive: true);
 
   FlutterFFmpeg flutterFFmpeg = new FlutterFFmpeg();
-  final FlutterFFprobe flutterFFprobe = new FlutterFFprobe();
-
-  Map<dynamic, dynamic> info = await flutterFFprobe.getMediaInformation(videoPath);
-  print(info);
+  FlutterFFmpegConfig flutterFFmpegConfig = new FlutterFFmpegConfig();
+  flutterFFmpegConfig.setLogLevel(LogLevel.AV_LOG_ERROR);
 
   double progress = 0.0;
 
@@ -185,12 +186,11 @@ Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime end
       clipPath
     ]);
 
+    onProgress(progress += 1.0 / (training.records.length * 2));
+
     if(res != 0) {
       return false;
     }
-
-    progress += 1.0 / (training.records.length * 2);
-    onProgress(progress);
 
     try {
       //save a thumbnail image
@@ -205,8 +205,8 @@ Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime end
       print(e);
     }
 
-    progress += 1.0 / (training.records.length * 2);
-    onProgress(progress);
+    onProgress(progress += 1.0 / (training.records.length * 2));
+
   }
 
   File(videoPath).deleteSync();
@@ -232,19 +232,35 @@ Future<String> exportClips(int trainingId, List<Record> records, void Function(d
   FlutterFFmpeg flutterFFmpeg = new FlutterFFmpeg();
   final FlutterFFprobe flutterFFprobe = new FlutterFFprobe();
 
-  double progress = 0.0;
+  FlutterFFmpegConfig flutterFFmpegConfig = new FlutterFFmpegConfig();
+  flutterFFmpegConfig.setLogLevel(LogLevel.AV_LOG_ERROR);
+
+  int currentRecord = 0;
+
+  const int videoLength = 4500;
+  double currentProgress = 0.0;
 
   for(Record r in records) {
+
+    flutterFFmpegConfig.enableStatisticsCallback((statistics) {
+      print("Statistics: executionId: ${statistics.executionId}, time: ${statistics.time}, size: ${statistics.size}, bitrate: ${statistics.bitrate}, speed: ${statistics.speed}, videoFrameNumber: ${statistics.videoFrameNumber}, videoQuality: ${statistics.videoQuality}, videoFps: ${statistics.videoFps}");
+      double progress = statistics.time / videoLength;
+      if(progress < 1.0) {
+        currentProgress = min(1.0, max(currentProgress,
+            (currentRecord + progress) / (records.length + 1)));
+        onProgress(currentProgress);
+      }
+    });
 
     String clipPath = join(path, r.id.toString() + ".mp4");
     String overlayPath = join(tmp_clips, "overlay_" + r.id.toString() + ".png");
 
-    Map<dynamic, dynamic> info = await flutterFFprobe.getMediaInformation(clipPath);
+    MediaInformation info = await flutterFFprobe.getMediaInformation(clipPath);
 
     int width, height;
 
-    width = min(info['streams'][0]['width'], info['streams'][0]['height']);
-    height = max(info['streams'][0]['width'], info['streams'][0]['height']);
+    width = min(info.getStreams().first.getAllProperties()['width'], info.getStreams().first.getAllProperties()['height']);
+    height = max(info.getStreams().first.getAllProperties()['width'], info.getStreams().first.getAllProperties()['height']);
 
     if(!(await createOverlayImage(overlayPath, r, width, height))) {
       print("Unable to generate overlay image");
@@ -263,17 +279,13 @@ Future<String> exportClips(int trainingId, List<Record> records, void Function(d
       return null;
     }
 
-    progress += 1.0 / (records.length + 1);
-    onProgress(progress);
+    currentRecord++;
+
   }
 
   String videosTxtPath = join(cache, "videos.txt");
   String videosTxtContent = records.map<String>((record) => "file '${join(tmp_clips, "${record.id.toString()}.mp4")}'").join("\n");
   File(videosTxtPath).writeAsStringSync(videosTxtContent);
-
-//  String videosTxtPath = join(cache, "videos.txt");
-//  String videosTxtContent = records.map<String>((record) => "file '${join(path, "${record.id.toString()}.mp4")}'").join("\n");
-//  File(videosTxtPath).writeAsStringSync(videosTxtContent);
 
   String outPath = join(cache, "output.mp4");
 
@@ -293,7 +305,7 @@ Future<String> exportClips(int trainingId, List<Record> records, void Function(d
     Directory(tmp_clips).deleteSync(recursive: true);
   } catch (e) {}
 
-  onProgress(100.0);
+  onProgress(1.0);
 
   if(ret == 0) {
     return outPath;
@@ -309,7 +321,7 @@ Future<bool> createOverlayImage(String path, Record record, int width, int heigh
   int circleRadius = width ~/ 20;
   int logoSize = width ~/ 5;
 
-  int stringHeight = circleRadius;
+  int stringHeight = width ~/ 30;
 
   image.Image logoImage = image.decodePng((await rootBundle.load("assets/img/icon.png")).buffer.asUint8List());
 
@@ -358,44 +370,3 @@ Tuple2<int, int> calculateImageStringSize(String string, image.BitmapFont font) 
 
   return Tuple2(stringWidth, stringHeight);
 }
-
-//Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime endTimeStamp, Training training) async {
-//
-//  Directory documents = await getApplicationDocumentsDirectory();
-//  Directory cache = await getTemporaryDirectory();
-//
-//  for(String name in ["icon.png", "-3.png", "-2.png", "-1.png", "1.png", "2.png", "3.png"])
-//    File(join(cache.path, name)).writeAsBytesSync((await rootBundle.load("assets/img/video_overlays/$name")).buffer.asUint8List());
-//  File(join(cache.path, "font.ttf")).writeAsBytesSync((await rootBundle.load("assets/fonts/Roboto-Regular.ttf")).buffer.asUint8List());
-//
-//  String path = join(documents.path, "video_scout", training.id.toString());
-//  Directory(path).createSync(recursive: true);
-//
-//  String fontPath = join(cache.path, "font.ttf");
-//
-//  FlutterFFmpeg flutterFFmpeg = new FlutterFFmpeg();
-//
-//  List<int> results = await Future.wait(
-//    training.records.map<Future<int>>((r) =>
-//      flutterFFmpeg.executeWithArguments([
-//        "-i", videoPath,
-//        "-i", join(cache.path, "icon.png"),
-//        "-i", join(cache.path, "${r.evaluation.toString()}.png"),
-//        "-filter_complex", '''
-//          [0][1]overlay=x=(main_w-60):y=(main_h-60)[v1];
-//          [v1][2]overlay=x=10:y=10,
-//          drawtext=fontfile=$fontPath:text='Training Stats':x=main_w-text_w-70:y=main_h-text_h-10-((50-text_h)/2):fontsize=30:fontcolor=white,
-//          drawtext=fontfile=$fontPath:text='${r.player.name}, ${r.action.name}':x=70:y=10+((50-text_h)/2):fontsize=30:fontcolor=white
-//        ''',
-//        "-ss", printDuration(maxDuration(r.timestamp.difference(startTimeStamp) - Duration(seconds: 3), Duration.zero)),
-//        "-to", printDuration(minDuration(r.timestamp.difference(startTimeStamp) + Duration(seconds: 2), endTimeStamp.difference(startTimeStamp))),
-//        join(path, r.id.toString() + ".mp4")
-//      ])
-//    )
-//  );
-//
-//  File(videoPath).deleteSync();
-//
-//  return true;
-//
-//}

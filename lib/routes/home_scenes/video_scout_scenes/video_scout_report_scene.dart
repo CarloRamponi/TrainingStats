@@ -144,7 +144,7 @@ class _VideoScoutReportSceneState extends State<VideoScoutReportScene> {
 
     try {
       var tmp = VideoPlayerController.file(
-          File(p.join(path, _currentRecord.id.toString() + ".mp4")));
+          File(p.join(path, record.id.toString() + ".mp4")));
       await tmp.initialize();
       tmp.addListener(_controllerListener);
       tmp.setVolume(0.0);
