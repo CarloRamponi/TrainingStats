@@ -30,7 +30,7 @@ class DB {
   static DB _instance;
   static final _DB_FILE = "training_stats.db";
 
-  static final _CURRENT_VERSION = 1;
+  static final _CURRENT_VERSION = 2;
 
   Database db;
 
@@ -238,6 +238,12 @@ class DB {
 
       print("Database upgraded, old version: $oldversion, new version: $newversion");
       switch(oldversion) {
+
+        case 1:
+          await db.execute('''
+            ALTER TABLE `Training` ADD `video` INTEGER NOT NULL DEFAULT 0
+          ''');
+          break;
 
         default:
           print("WARNING DB version not supported: $oldversion");
