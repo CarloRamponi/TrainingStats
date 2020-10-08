@@ -1,0 +1,1015 @@
+./Runner/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "$(DEVELOPMENT_LANGUAGE)"
+  "CFBundleExecutable" => "$(EXECUTABLE_NAME)"
+  "CFBundleIdentifier" => "$(PRODUCT_BUNDLE_IDENTIFIER)"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "trainingstats"
+  "CFBundlePackageType" => "APPL"
+  "CFBundleShortVersionString" => "$(MARKETING_VERSION)"
+  "CFBundleSignature" => "????"
+  "CFBundleVersion" => "$(CURRENT_PROJECT_VERSION)"
+  "LSRequiresIPhoneOS" => 1
+  "MinimumOSVersion" => "11.0"
+  "NSCameraUsageDescription" => "Camera is needed in order to be able to take picture of players."
+  "NSPhotoLibraryUsageDescription" => "Photo library is used to choose a player's photo from the phone memory."
+  "UILaunchStoryboardName" => "LaunchScreen"
+  "UIMainStoryboardFile" => "Main"
+  "UISupportedInterfaceOrientations" => [
+    0 => "UIInterfaceOrientationPortrait"
+    1 => "UIInterfaceOrientationLandscapeLeft"
+    2 => "UIInterfaceOrientationLandscapeRight"
+  ]
+  "UISupportedInterfaceOrientations~ipad" => [
+    0 => "UIInterfaceOrientationPortrait"
+    1 => "UIInterfaceOrientationPortraitUpsideDown"
+    2 => "UIInterfaceOrientationLandscapeLeft"
+    3 => "UIInterfaceOrientationLandscapeRight"
+  ]
+  "UIViewControllerBasedStatusBarAppearance" => 0
+}
+./Flutter/Flutter.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "Flutter"
+  "CFBundleIdentifier" => "io.flutter.flutter"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "Flutter"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "1.0"
+  "CFBundleSignature" => "????"
+  "CFBundleVersion" => "1.0"
+  "ClangVersion" => "Apple clang version 11.0.0 (clang-1100.0.33.8)"
+  "FlutterEngine" => "b073d69b3c19344a3eaf1d33cc4726fb93c0362c"
+  "MinimumOSVersion" => "11.0"
+}
+./Flutter/App.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "$(DEVELOPMENT_LANGUAGE)"
+  "CFBundleExecutable" => "App"
+  "CFBundleIdentifier" => "io.flutter.flutter.app"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "App"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "1.0"
+  "CFBundleSignature" => "????"
+  "CFBundleVersion" => "1.0"
+  "MinimumOSVersion" => "11.0"
+}
+./Pods/mobile-ffmpeg-https/libavdevice.xcframework/ios-x86_64-maccatalyst/libavdevice.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavdevice"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavdevice"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavdevice"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "58.11.101"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "58.11.101"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavdevice.xcframework/ios-x86_64-simulator/libavdevice.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavdevice"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavdevice"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavdevice"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "58.11.101"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "58.11.101"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavdevice.xcframework/ios-arm64/libavdevice.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavdevice"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavdevice"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavdevice"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "58.11.101"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "58.11.101"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavdevice.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "libavdevice.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "libavdevice.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "libavdevice.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/gmp.xcframework/ios-x86_64-maccatalyst/gmp.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "gmp"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Gmp"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "gmp"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "6.2.0"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "6.2.0"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/gmp.xcframework/ios-x86_64-simulator/gmp.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "gmp"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Gmp"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "gmp"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "6.2.0"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "6.2.0"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/gmp.xcframework/ios-arm64/gmp.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "gmp"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Gmp"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "gmp"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "6.2.0"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "6.2.0"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/gmp.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "gmp.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "gmp.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "gmp.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/libnettle.xcframework/ios-x86_64-maccatalyst/libnettle.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libnettle"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libnettle"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libnettle"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.6"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.6"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libnettle.xcframework/ios-x86_64-simulator/libnettle.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libnettle"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libnettle"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libnettle"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.6"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.6"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libnettle.xcframework/ios-arm64/libnettle.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libnettle"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libnettle"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libnettle"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.6"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.6"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libnettle.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "libnettle.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "libnettle.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "libnettle.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/libavformat.xcframework/ios-x86_64-maccatalyst/libavformat.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavformat"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavformat"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavformat"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "58.48.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "58.48.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavformat.xcframework/ios-x86_64-simulator/libavformat.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavformat"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavformat"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavformat"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "58.48.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "58.48.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavformat.xcframework/ios-arm64/libavformat.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavformat"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavformat"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavformat"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "58.48.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "58.48.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavformat.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "libavformat.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "libavformat.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "libavformat.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/gnutls.xcframework/ios-x86_64-maccatalyst/gnutls.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "gnutls"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Gnutls"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "gnutls"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.6.13"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.6.13"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/gnutls.xcframework/ios-x86_64-simulator/gnutls.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "gnutls"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Gnutls"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "gnutls"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.6.13"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.6.13"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/gnutls.xcframework/ios-arm64/gnutls.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "gnutls"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Gnutls"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "gnutls"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.6.13"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.6.13"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/gnutls.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "gnutls.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "gnutls.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "gnutls.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/mobileffmpeg.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "mobileffmpeg.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "mobileffmpeg.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "mobileffmpeg.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/libavutil.xcframework/ios-x86_64-maccatalyst/libavutil.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavutil"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavutil"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavutil"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "56.55.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "56.55.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavutil.xcframework/ios-x86_64-simulator/libavutil.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavutil"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavutil"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavutil"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "56.55.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "56.55.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavutil.xcframework/ios-arm64/libavutil.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavutil"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavutil"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavutil"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "56.55.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "56.55.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavutil.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "libavutil.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "libavutil.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "libavutil.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/libhogweed.xcframework/ios-x86_64-maccatalyst/libhogweed.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libhogweed"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libhogweed"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libhogweed"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.6"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.6"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libhogweed.xcframework/ios-x86_64-simulator/libhogweed.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libhogweed"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libhogweed"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libhogweed"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.6"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.6"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libhogweed.xcframework/ios-arm64/libhogweed.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libhogweed"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libhogweed"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libhogweed"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.6"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.6"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libhogweed.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "libhogweed.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "libhogweed.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "libhogweed.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/libavcodec.xcframework/ios-x86_64-maccatalyst/libavcodec.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavcodec"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavcodec"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavcodec"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "58.96.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "58.96.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavcodec.xcframework/ios-x86_64-simulator/libavcodec.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavcodec"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavcodec"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavcodec"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "58.96.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "58.96.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavcodec.xcframework/ios-arm64/libavcodec.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavcodec"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavcodec"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavcodec"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "58.96.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "58.96.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavcodec.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "libavcodec.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "libavcodec.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "libavcodec.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/libswresample.xcframework/ios-x86_64-maccatalyst/libswresample.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libswresample"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libswresample"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libswresample"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.8.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.8.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libswresample.xcframework/ios-x86_64-simulator/libswresample.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libswresample"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libswresample"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libswresample"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.8.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.8.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libswresample.xcframework/ios-arm64/libswresample.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libswresample"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libswresample"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libswresample"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "3.8.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "3.8.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libswresample.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "libswresample.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "libswresample.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "libswresample.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/libswscale.xcframework/ios-x86_64-maccatalyst/libswscale.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libswscale"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libswscale"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libswscale"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "5.8.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "5.8.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libswscale.xcframework/ios-x86_64-simulator/libswscale.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libswscale"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libswscale"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libswscale"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "5.8.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "5.8.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libswscale.xcframework/ios-arm64/libswscale.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libswscale"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libswscale"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libswscale"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "5.8.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "5.8.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libswscale.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "libswscale.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "libswscale.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "libswscale.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
+./Pods/mobile-ffmpeg-https/libavfilter.xcframework/ios-x86_64-maccatalyst/libavfilter.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavfilter"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavfilter"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavfilter"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "7.87.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "7.87.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavfilter.xcframework/ios-x86_64-simulator/libavfilter.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavfilter"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavfilter"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavfilter"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "7.87.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "7.87.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavfilter.xcframework/ios-arm64/libavfilter.framework/Info.plist
+{
+  "CFBundleDevelopmentRegion" => "en"
+  "CFBundleExecutable" => "libavfilter"
+  "CFBundleIdentifier" => "com.arthenica.mobileffmpeg.Libavfilter"
+  "CFBundleInfoDictionaryVersion" => "6.0"
+  "CFBundleName" => "libavfilter"
+  "CFBundlePackageType" => "FMWK"
+  "CFBundleShortVersionString" => "7.87.100"
+  "CFBundleSignature" => "????"
+  "CFBundleSupportedPlatforms" => [
+    0 => "iPhoneOS"
+  ]
+  "CFBundleVersion" => "7.87.100"
+  "MinimumOSVersion" => "12.1"
+  "NSPrincipalClass" => ""
+}
+./Pods/mobile-ffmpeg-https/libavfilter.xcframework/Info.plist
+{
+  "AvailableLibraries" => [
+    0 => {
+      "LibraryIdentifier" => "ios-x86_64-maccatalyst"
+      "LibraryPath" => "libavfilter.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "maccatalyst"
+    }
+    1 => {
+      "LibraryIdentifier" => "ios-x86_64-simulator"
+      "LibraryPath" => "libavfilter.framework"
+      "SupportedArchitectures" => [
+        0 => "x86_64"
+      ]
+      "SupportedPlatform" => "ios"
+      "SupportedPlatformVariant" => "simulator"
+    }
+    2 => {
+      "LibraryIdentifier" => "ios-arm64"
+      "LibraryPath" => "libavfilter.framework"
+      "SupportedArchitectures" => [
+        0 => "arm64"
+      ]
+      "SupportedPlatform" => "ios"
+    }
+  ]
+  "CFBundlePackageType" => "XFWK"
+  "XCFrameworkFormatVersion" => "1.0"
+}
