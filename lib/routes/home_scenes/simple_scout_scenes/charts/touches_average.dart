@@ -53,7 +53,7 @@ class TouchesAverageState extends ExportableChartState<TouchesAverage> {
 
   @override
   void initState() {
-    intervalIndex = widget.statistics.touchesAverageIntervals.length ~/ 2; ///select the mean one
+    intervalIndex = 1; ///select the second one
     loading = _loadFirstData();
     super.initState();
   }
@@ -120,7 +120,7 @@ class TouchesAverageState extends ExportableChartState<TouchesAverage> {
   Future<ExportedChart> getImage() async {
     RenderRepaintBoundary boundary = _chartKey.currentContext.findRenderObject();
     return ExportedChart(
-      title: "Ball touches every ${widget.statistics.touchesAverageIntervals[intervalIndex]} seconds",
+      title: "Actions every ${widget.statistics.touchesAverageIntervals[intervalIndex]} seconds",
       image: await (await boundary.toImage(pixelRatio: 8.0)).toByteData(format: ImageByteFormat.png)
     );
   }

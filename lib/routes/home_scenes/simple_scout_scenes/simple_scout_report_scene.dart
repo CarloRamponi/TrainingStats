@@ -31,6 +31,7 @@ import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/statistics.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/classics.dart';
+import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/efficiency.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exportable_chart_state.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/touches_average.dart';
 import 'package:path/path.dart' as path;
@@ -64,12 +65,12 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
 
   Statistics statistics;
   GlobalKey<ExportableChartState> _classicChart = GlobalKey();
+  GlobalKey<ExportableChartState> _efficiencyChart = GlobalKey();
   GlobalKey<ExportableChartState> _avgChart = GlobalKey();
 
   @override
   void initState() {
     loadingRecords = widget.training.loadRecords()..then((value) => statistics = Statistics(widget.training));
-
     super.initState();
   }
 
@@ -153,13 +154,23 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
 
   void _exportPdf() async {
 
-    ExportedChart classicChart = await loadingPopup(context, _classicChart.currentState.getImage());
-    ExportedChart avgChart = await loadingPopup(context, _avgChart.currentState.getImage());
+    await loadingPopupWithProgress(context, (onProgress) async {
 
-    String filePath = path.join((await getTemporaryDirectory()).path, randomString(10, from: 62, to: 86) + ".pdf");
-    File(filePath).writeAsBytesSync((await loadingPopup(context, statistics.generateReport([classicChart, avgChart]))).toList());
+      ExportedChart efficiencyChart = await _efficiencyChart.currentState.getImage();
+      onProgress(0.25);
 
-    FlutterShare.shareFile(title: "Simple scout report.pdf", filePath: filePath);
+      ExportedChart classicChart = await _classicChart.currentState.getImage();
+      onProgress(0.50);
+
+      ExportedChart avgChart = await _avgChart.currentState.getImage();
+      onProgress(0.75);
+
+      String filePath = path.join((await getTemporaryDirectory()).path, randomString(10, from: 62, to: 86) + ".pdf");
+      File(filePath).writeAsBytesSync((await statistics.generateReport([efficiencyChart, classicChart, avgChart])).toList());
+      onProgress(1.0);
+
+      FlutterShare.shareFile(title: "Simple scout report.pdf", filePath: filePath);
+    }, "Generating PDF report...");
 
   }
 
@@ -308,13 +319,11 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
                     ),
                   ),
                 ),
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: Text(
-                  "Classical statistics",
-                  style: Theme.of(context).textTheme.headline5,
-                ),
+              EfficiencyChart(
+                key: _efficiencyChart,
+                statistics: statistics,
               ),
+              Divider(),
               ClassicCharts(
                 key: _classicChart,
                 statistics: statistics,
@@ -323,7 +332,7 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
               Padding(
                 padding: EdgeInsets.all(10.0),
                 child: Text(
-                  "Ball touches every N seconds",
+                  "Actions every N seconds",
                   style: Theme.of(context).textTheme.headline5,
                 ),
               ),

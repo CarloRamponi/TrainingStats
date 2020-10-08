@@ -67,7 +67,28 @@ class _ActionsSceneState extends State<ActionsScene> {
                       _changeColorPopup(action);
                     },
                   ),
-                  title: Text(action.name),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(action.name),
+                      ),
+                      Text(
+                        'W',
+                        style: TextStyle(
+                            color: action.winning ? Colors.green : Colors.grey
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(left: 5.0),
+                        child: Text(
+                          'L',
+                          style: TextStyle(
+                            color: action.losing ? Colors.red : Colors.grey
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   subtitle: Text(action.shortName),
                   trailing: IconButton(
                     icon: Icon(
@@ -171,84 +192,110 @@ class _ActionsSceneState extends State<ActionsScene> {
 
   void _createActionPopup() async {
 
-    _creatingAction = LocalAction.Action(name: "", shortName: "", color: Colors.lightBlue);
+    _creatingAction = LocalAction.Action(name: "", shortName: "", color: Colors.lightBlue, winning: true, losing: true);
     GlobalKey<FormState> formKey = GlobalKey();
     FocusNode shortNameFocusNode = FocusNode();
 
-    var result = await showDialog(context: context, builder: (context) => AlertDialog(
-      title: Text("New action"),
-      content: SingleChildScrollView(
-        child: Form(
-            key: formKey,
-            child: Column(
-              children: <Widget>[
-                TextFormField(
-                  autofocus: true,
-                  onChanged: (value) {
-                    _creatingAction.name = value;
-                  },
-                  onEditingComplete: () {
-                    shortNameFocusNode.requestFocus();
-                  },
-                  maxLength: 128,
-                  decoration: InputDecoration(
-                      hintText: "Action name",
-                      counterText: ""
+    var result = await showDialog(context: context, builder: (context) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
+        title: Text("New action"),
+        content: SingleChildScrollView(
+          child: Form(
+              key: formKey,
+              child: Column(
+                children: <Widget>[
+                  TextFormField(
+                    autofocus: true,
+                    onChanged: (value) {
+                      _creatingAction.name = value;
+                    },
+                    onEditingComplete: () {
+                      shortNameFocusNode.requestFocus();
+                    },
+                    maxLength: 128,
+                    decoration: InputDecoration(
+                        hintText: "Action name",
+                        counterText: ""
+                    ),
+                    validator: (value) {
+                      if (value.isEmpty) {
+                        return "Enter some text";
+                      } else {
+                        return null;
+                      }
+                    },
                   ),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return "Enter some text";
-                    } else {
-                      return null;
-                    }
-                  },
-                ),
-                TextFormField(
-                  focusNode: shortNameFocusNode,
-                  onChanged: (value) {
-                    _creatingAction.shortName = value;
-                  },
-                  maxLength: 2,
-                  decoration: InputDecoration(
-                      hintText: "Action short name",
-                      counterText: ""
+                  TextFormField(
+                    focusNode: shortNameFocusNode,
+                    onChanged: (value) {
+                      _creatingAction.shortName = value;
+                    },
+                    maxLength: 2,
+                    decoration: InputDecoration(
+                        hintText: "Action short name",
+                        counterText: ""
+                    ),
+                    validator: (value) {
+                      if (value.isEmpty) {
+                        return "Enter some text";
+                      } else {
+                        return null;
+                      }
+                    },
                   ),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return "Enter some text";
-                    } else {
-                      return null;
-                    }
-                  },
-                ),
-                Padding(
-                  padding: EdgeInsets.only(top: 20.0),
-                  child: BlockPicker(
-                    pickerColor: _creatingAction.color,
-                    onColorChanged: (color) { _creatingAction.color = color; },
+                  Tooltip(
+                    message: "Checked if a perfect action of this kind results in a point for the team",
+                    child: CheckboxListTile(
+                      value: _creatingAction.winning,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          _creatingAction.winning = value;
+                        });
+                      },
+                      title: Text("Winning"),
+                    ),
                   ),
-                )
-              ],
-            )
+                  Tooltip(
+                    message: "Checked if a bad action of this kind results in a point for the other team",
+                    child: CheckboxListTile(
+                      value: _creatingAction.losing,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          _creatingAction.losing = value;
+                        });
+                      },
+                      title: Text("Losing"),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 20.0),
+                    child: BlockPicker(
+                      pickerColor: _creatingAction.color,
+                      onColorChanged: (color) { _creatingAction.color = color; },
+                    ),
+                  )
+                ],
+              )
+          ),
         ),
+        actions: <Widget>[
+          FlatButton(
+            child: Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          FlatButton(
+            child: Text("Create"),
+            onPressed: () async {
+              if(formKey.currentState.validate()) {
+                await LocalAction.ActionProvider.create(_creatingAction);
+                Navigator.of(context).pop(true);
+              }
+            },
+          )
+        ],
       ),
-      actions: <Widget>[
-        FlatButton(
-          child: Text('Cancel'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        FlatButton(
-          child: Text("Create"),
-          onPressed: () async {
-            if(formKey.currentState.validate()) {
-              await LocalAction.ActionProvider.create(_creatingAction);
-              Navigator.of(context).pop(true);
-            }
-          },
-        )
-      ],
     ));
 
     if(result != null)
@@ -263,82 +310,110 @@ class _ActionsSceneState extends State<ActionsScene> {
     GlobalKey<FormState> _form = GlobalKey();
     FocusNode shortNameFocusNode = FocusNode();
 
-    var result = await showDialog(context: context, builder: (context) => AlertDialog(
-      title: Text("Edit action"),
-      actions: [
-        FlatButton(
-          child: Text("Cancel"),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        FlatButton(
-          child: Text("Update"),
-          onPressed: () async {
-            if(_form.currentState.validate()) {
-              await LocalAction.ActionProvider.update(action);
-              Navigator.of(context).pop(true);
-            }
-          },
-        )
-      ],
-      content: Container(
-        child: Form(
-            key: _form,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  initialValue: action.name,
-                  autofocus: true,
-                  onChanged: (value) {
-                    action.name = value;
-                  },
-                  onEditingComplete: () {
-                    shortNameFocusNode.requestFocus();
-                  },
-                  maxLength: 128,
-                  decoration: InputDecoration(
-                      hintText: "Action name",
-                      counterText: ""
-                  ),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return "Enter some text";
-                    } else {
-                      return null;
-                    }
-                  },
-                ),
-                TextFormField(
-                  initialValue: action.shortName,
-                  focusNode: shortNameFocusNode,
-                  onChanged: (value) {
-                    action.shortName = value;
-                  },
-                  maxLength: 2,
-                  decoration: InputDecoration(
-                      hintText: "Action short name",
-                      counterText: ""
-                  ),
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return "Enter some text";
-                    } else {
-                      return null;
-                    }
-                  },
-                  onEditingComplete: () async {
-                    if(_form.currentState.validate()) {
-                      await LocalAction.ActionProvider.update(action);
-                      Navigator.of(context).pop(true);
-                    }
-                  },
-                ),
-              ],
+    var result = await showDialog(context: context, builder: (context) => StatefulBuilder(
+      builder: (context, setDialogState) => AlertDialog(
+          title: Text("Edit action"),
+          actions: [
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text("Update"),
+              onPressed: () async {
+                if(_form.currentState.validate()) {
+                  await LocalAction.ActionProvider.update(action);
+                  Navigator.of(context).pop(true);
+                }
+              },
             )
-        ),
-      )
+          ],
+          content: SingleChildScrollView(
+            child: Container(
+              child: Form(
+                  key: _form,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        initialValue: action.name,
+                        autofocus: true,
+                        onChanged: (value) {
+                          action.name = value;
+                        },
+                        onEditingComplete: () {
+                          shortNameFocusNode.requestFocus();
+                        },
+                        maxLength: 128,
+                        decoration: InputDecoration(
+                            hintText: "Action name",
+                            counterText: ""
+                        ),
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return "Enter some text";
+                          } else {
+                            return null;
+                          }
+                        },
+                      ),
+                      TextFormField(
+                        initialValue: action.shortName,
+                        focusNode: shortNameFocusNode,
+                        onChanged: (value) {
+                          action.shortName = value;
+                        },
+                        maxLength: 2,
+                        decoration: InputDecoration(
+                            hintText: "Action short name",
+                            counterText: ""
+                        ),
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return "Enter some text";
+                          } else {
+                            return null;
+                          }
+                        },
+                        onEditingComplete: () async {
+                          if(_form.currentState.validate()) {
+                            await LocalAction.ActionProvider.update(action);
+                            Navigator.of(context).pop(true);
+                          }
+                        },
+                      ),
+                      Tooltip(
+                        message: "Checked if a perfect action of this kind results in a point for the team",
+                        child: CheckboxListTile(
+                          value: action.winning,
+                          onChanged: (value) {
+                            setDialogState(() {
+                              action.winning = value;
+                            });
+                          },
+                          title: Text("Winning"),
+                        ),
+                      ),
+                      Tooltip(
+                        message: "Checked if a bad action of this kind results in a point for the other team",
+                        child: CheckboxListTile(
+                          value: action.losing,
+                          onChanged: (value) {
+                            setDialogState(() {
+                              action.losing = value;
+                            });
+                          },
+                          title: Text("Losing"),
+                        ),
+                      ),
+                    ],
+                  )
+              ),
+            ),
+          )
+      ),
     ));
 
     if(result == true) {

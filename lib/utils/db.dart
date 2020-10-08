@@ -30,7 +30,7 @@ class DB {
   static DB _instance;
   static final _DB_FILE = "training_stats.db";
 
-  static final _CURRENT_VERSION = 2;
+  static final _CURRENT_VERSION = 3;
 
   Database db;
 
@@ -100,7 +100,9 @@ class DB {
           `name` VARCHAR(128) NOT NULL,
           `short_name` CHAR(2) NOT NULL,
           `color` INTEGER NULL,
-          `orderIndex` INTEGER NOT NULL DEFAULT 0
+          `orderIndex` INTEGER NOT NULL DEFAULT 0,
+          `winning` INTEGER NOT NULL DEFAULT 1,
+          `losing` INTEGER NOT NULL DEFAULT 1
           )
       ''');
 
@@ -209,18 +211,19 @@ class DB {
     await db.execute('''
         INSERT INTO `Role` (name, color) VALUES
         ('Setter', ${0xff4caf50}),
+        ('Outside hitter', ${0xffcddc39}),
         ('Libero', ${0xffffc107}),
-        ('Central', ${0xff2196f3}),
+        ('Middle blocker', ${0xff2196f3}),
         ('Hitter', ${0xff9c27b0})
       ''');
 
     await db.execute('''
-        INSERT INTO `Action` (name, short_name, color) VALUES
-          ('Serve', 'S', ${0xff9c27b0}),
-          ('Reception', 'R', ${0xffffc107}),
-          ('Attack', 'A', ${0xff2196f3}),
-          ('Block', 'B', ${0xff009688}),
-          ('Game', 'G', ${0xff4caf50})
+        INSERT INTO `Action` (name, short_name, color, winning, losing) VALUES
+          ('Serve', 'S', ${0xff9c27b0}, 1, 1),
+          ('Reception', 'R', ${0xffffc107}, 0, 1),
+          ('Attack', 'A', ${0xff2196f3}, 1, 1),
+          ('Block', 'B', ${0xff009688}, 1, 0),
+          ('Game', 'G', ${0xff4caf50}, 0, 1)
       ''');
 
   }
@@ -237,18 +240,22 @@ class DB {
     }, onUpgrade: (db, oldversion, newversion) async {
 
       print("Database upgraded, old version: $oldversion, new version: $newversion");
-      switch(oldversion) {
 
-        case 1:
-          await db.execute('''
-            ALTER TABLE `Training` ADD `video` INTEGER NOT NULL DEFAULT 0
-          ''');
-          break;
-
-        default:
-          print("WARNING DB version not supported: $oldversion");
-
+      if(oldversion <= 1) {
+        await db.execute('''
+          ALTER TABLE `Training` ADD `video` INTEGER NOT NULL DEFAULT 0
+        ''').catchError((e) => print(e));
       }
+
+      if(oldversion <= 2) {
+        await db.execute('''
+          ALTER TABLE `Action` ADD `winning` INTEGER NOT NULL DEFAULT  1
+        ''').catchError((e) => print(e));
+        await db.execute('''
+          ALTER TABLE `Action` ADD `losing` INTEGER NOT NULL DEFAULT 1
+        ''').catchError((e) => print(e));
+      }
+
     });
   }
 

@@ -29,8 +29,9 @@ class Action {
   String shortName;
   Color color;
   int index;
+  bool winning, losing;
 
-  Action({this.id, this.name, this.shortName, this.color, this.index});
+  Action({this.id, this.name, this.shortName, this.color, this.index, this.winning, this.losing});
 
   static Action fromMap(Map<String, dynamic> m) {
     return Action(
@@ -38,7 +39,9 @@ class Action {
       name: m['name'],
       shortName: m['short_name'],
       color: m['color'] == null ? null : Color(m['color']),
-      index: m['orderIndex']
+      index: m['orderIndex'],
+      winning: m['winning'] == 1,
+      losing: m['losing'] == 1
     );
   }
 
@@ -47,7 +50,9 @@ class Action {
       'name': this.name,
       'short_name': this.shortName,
       'color': this.color.value,
-      'orderIndex' : this.index
+      'orderIndex' : this.index,
+      'winning' : this.winning ? 1 : 0,
+      'losing' : this.losing ? 1 : 0
     };
 
     if (id != null) {

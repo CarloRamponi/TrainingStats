@@ -19,10 +19,11 @@
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:flutter/material.dart' as Material;
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
-import 'package:training_stats/datatypes/action.dart';
+import 'package:training_stats/datatypes/action.dart' as TSA;
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exportable_chart_state.dart';
@@ -45,15 +46,26 @@ class Statistics {
   Map<Player, double> _perfection;
   Map<Player, int> _touches;
 
-  Map<Player, Map<Action, double>> _positivityPerAction;
-  Map<Player, Map<Action, double>> _efficiencyPerAction;
-  Map<Player, Map<Action, double>> _perfectionPerAction;
-  Map<Player, Map<Action, int>> _touchesPerAction;
+  Map<Player, Map<TSA.Action, double>> _positivityPerAction;
+  Map<Player, Map<TSA.Action, double>> _efficiencyPerAction;
+  Map<Player, Map<TSA.Action, double>> _perfectionPerAction;
+  Map<Player, Map<TSA.Action, int>> _touchesPerAction;
+
+  List<Player> _players; //players that have at least one record
+
+  Map<Material.Color, Map<String, Map<Player, int>>> _efficiencyChartData;
 
   int _maxTime;
   int _minTime;
 
   List<Map<Player, List<int>>> _touchesAverage;
+
+  List<Player> get players {
+    if(_players == null) {
+      _players = training.players.where((element) => training.records.map<Player>((e) => e.player).contains(element)).toList(); ///select only players which have at least on record
+    }
+    return _players;
+  }
 
   Map<Player, List<int>> touchesAverage(int intervalIndex) {
     if(_touchesAverage[intervalIndex] == null) {
@@ -99,32 +111,39 @@ class Statistics {
     return _touches;
   }
 
-  Map<Player, Map<Action, double>> get positivityPerAction {
+  Map<Player, Map<TSA.Action, double>> get positivityPerAction {
     if(_positivityPerAction == null) {
       _computePositivity();
     }
     return _positivityPerAction;
   }
 
-  Map<Player, Map<Action, double>> get efficiencyPerAction {
+  Map<Player, Map<TSA.Action, double>> get efficiencyPerAction {
     if(_efficiencyPerAction == null) {
       _computeEfficiency();
     }
     return _efficiencyPerAction;
   }
 
-  Map<Player, Map<Action, double>> get perfectionPerAction {
+  Map<Player, Map<TSA.Action, double>> get perfectionPerAction {
     if(_perfectionPerAction == null) {
       _computePerfection();
     }
     return _perfectionPerAction;
   }
 
-  Map<Player, Map<Action, int>> get touchesPerAction {
+  Map<Player, Map<TSA.Action, int>> get touchesPerAction {
     if(_touchesPerAction == null) {
       _computeTouches();
     }
     return _touchesPerAction;
+  }
+
+  Map<Material.Color, Map<String, Map<Player, int>>> get efficiencyChartData {
+    if(_efficiencyChartData == null) {
+      _computeEfficiencyChartData();
+    }
+    return _efficiencyChartData;
   }
 
   void _computePositivity() {
@@ -136,7 +155,7 @@ class Statistics {
     );
 
     _positivityPerAction = Map.fromEntries(
-      training.players.map<MapEntry<Player, Map<Action, double>>>((player) => MapEntry(
+      training.players.map<MapEntry<Player, Map<TSA.Action, double>>>((player) => MapEntry(
         player,
         Map.fromEntries(
           training.actions.map((action) => MapEntry(
@@ -168,7 +187,7 @@ class Statistics {
       )
     );
 
-    _efficiencyPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, double>>>((player) => MapEntry(
+    _efficiencyPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<TSA.Action, double>>>((player) => MapEntry(
         player,
         Map.fromEntries(
             training.actions.map((action) => MapEntry(
@@ -205,7 +224,7 @@ class Statistics {
         )
     );
 
-    _perfectionPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, double>>>((player) => MapEntry(
+    _perfectionPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<TSA.Action, double>>>((player) => MapEntry(
         player,
         Map.fromEntries(
             training.actions.map((action) => MapEntry(
@@ -234,7 +253,7 @@ class Statistics {
         )
     );
 
-    _touchesPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<Action, int>>>((player) => MapEntry(
+    _touchesPerAction = Map.fromEntries(training.players.map<MapEntry<Player, Map<TSA.Action, int>>>((player) => MapEntry(
         player,
         Map.fromEntries(
             training.actions.map((action) => MapEntry(
@@ -244,6 +263,60 @@ class Statistics {
         )
     )));
 
+  }
+  
+  void _computeEfficiencyChartData() {
+
+    _efficiencyChartData = {
+      Material.Colors.green: Map.fromEntries(
+        training.actions.where((action) => action.winning).map((action) => MapEntry(
+            action.shortName,
+            Map.fromEntries(
+                players.map((player) => MapEntry(
+                    player,
+                    training.actionsSums[player][action][3]
+                ))
+            )
+        )).toList() + [
+          MapEntry(
+              'Points',
+              Map.fromEntries(
+                  players.map((player) => MapEntry(
+                      player,
+                      training.actionsSums[player].entries.where((entry) => entry.key.winning).map((entry) => entry.value[3]).reduce((e1, e2) => e1+e2) ///sum of all perfect winning actions
+                  )
+                  ))
+          )
+        ]
+      ),
+      Material.Colors.blue: {
+        'Efficiency' : Map.fromEntries(
+            players.map((player) => MapEntry(
+                player,
+                training.actionsSums[player].entries.where((entry) => entry.key.winning).map((entry) => entry.value[3]).reduce((e1, e2) => e1+e2) - training.actionsSums[player].entries.where((entry) => entry.key.losing).map((entry) => entry.value[-3]).reduce((e1, e2) => e1+e2) ///sum of all perfect winning actions minus sum of all terrible losing actions
+            )
+            ))
+      },
+      Material.Colors.red: Map.fromEntries([
+        MapEntry(
+            'Errors',
+            Map.fromEntries(
+                players.map((player) => MapEntry(
+                    player,
+                    training.actionsSums[player].entries.where((entry) => entry.key.losing).map((entry) => entry.value[-3]).reduce((e1, e2) => e1+e2) ///sum of all perfect winning actions
+                )
+                ))
+        ),
+      ] + training.actions.where((action) => action.losing).map((action) => MapEntry(
+        'e' + action.shortName,
+        Map.fromEntries(
+            players.map((player) => MapEntry(
+                player,
+                training.actionsSums[player][action][-3]
+            ))
+        )
+      )).toList())
+    };
   }
 
   void _calculateTouchesAverage(int index) {
@@ -256,16 +329,7 @@ class Statistics {
 
   Future<Uint8List> generateReport(List<ExportedChart> charts) async {
 
-    const tableHeaders = ['', 'Player', 'Positivity', 'Efficiency', 'Perfection', 'Total actions'];
 
-    List<List<dynamic>> dataTable = (training.players).map<List<dynamic>>((player) => [
-      player.shortName,
-      player.name,
-      this.positivity[player],
-      this.efficiency[player],
-      this.perfection[player],
-      this.touches[player],
-    ]).toList();
 
     final baseColor = PdfColors.deepOrange;
 
@@ -276,6 +340,104 @@ class Statistics {
       document.document,
       bytes: (await rootBundle.load('assets/img/icon.png')).buffer.asUint8List(),
     );
+
+    final efficiencyTables = chunk(players, 18).map((dataChunk) => Table(
+        border: null,
+        children: [
+          TableRow(
+              decoration: BoxDecoration(
+                color: baseColor,
+              ),
+              children: <Widget>[
+                SizedBox(
+                    height: 30.0,
+                    child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                            padding: EdgeInsets.all(5.0),
+                            child: Text(
+                              "",
+                              style: TextStyle(
+                                  color: PdfColors.white,
+                                  fontWeight: FontWeight.bold
+                              ),
+                            )
+                        )
+                    )
+                ),
+                SizedBox(
+                  height: 30.0,
+                  child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                          padding: EdgeInsets.all(5.0),
+                          child: Text(
+                            "Player",
+                            style: TextStyle(
+                                color: PdfColors.white,
+                                fontWeight: FontWeight.bold
+                            ),
+                          )
+                      )
+                  )
+                )
+              ] + efficiencyChartData.entries.map((entry) => entry.value.keys.map((columnName) => SizedBox(
+                  height: 30.0,
+                  child: Container(
+                    color: _convertColor(entry.key),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
+                        padding: EdgeInsets.all(5.0),
+                        child: Text(
+                          columnName,
+                          style: TextStyle(
+                              color: PdfColors.white,
+                              fontWeight: FontWeight.bold
+                          ),
+                        )
+                      )
+                    )
+                  )
+              ))).expand((e) => e).toList()
+          )
+        ] + dataChunk.map((player) => [
+          TableRow(
+              decoration: BoxDecoration(
+                  border: BoxBorder(bottom: true, top: true, color: baseColor, width: 1.0)
+              ),
+              children: <Widget>[
+                Padding(
+                    padding: EdgeInsets.all(5.0),
+                    child: Text(
+                        player.shortName
+                    )
+                ),
+                Padding(
+                    padding: EdgeInsets.all(5.0),
+                    child: Text(
+                        player.name,
+                        maxLines: 1,
+                        tightBounds: true,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        )
+                    )
+                )
+              ] + efficiencyChartData.entries.map((entry) => entry.value.values.map((value) => Container(
+                alignment: Alignment.center,
+                color: _convertColor(entry.key),
+                child: Padding(
+                    padding: EdgeInsets.all(5.0),
+                    child: Text(
+                      value[player].toString(),
+                    )
+                ),
+              ))).expand((e) => e).toList()
+          )
+        ]).expand((e) => e).toList())).toList();
+
+    const tableHeaders = ['', 'Player', 'Positivity', 'Efficiency', 'Perfection', 'Total actions'];
 
     final tables = chunk(training.players, 4).map((dataChunk) => Table(
       border: null,
@@ -415,6 +577,67 @@ class Statistics {
     )).toList()).expand((e) => e).toList())).toList();
     // Add page to the PDF
 
+    for(var table in efficiencyTables) {
+      document.addPage(
+        Page(
+          pageTheme: _myPageTheme(icon),
+          build: (context) {
+            return Column(
+              children: [
+                Text('${training.team.teamName}, ${training.ts_start.day}/${training.ts_start.month}/${training.ts_start.year}',
+                    style: TextStyle(
+                      color: baseColor,
+                      fontSize: 30,
+                    )),
+                Divider(),
+                Expanded(
+                    child: table
+                )
+              ],
+            );
+          },
+        ),
+      );
+    }
+
+    document.addPage(Page(
+      pageTheme: _myPageTheme(icon),
+      build: (context) {
+        return Column(
+            children: [
+              Text('${training.team.teamName}, ${training.ts_start.day}/${training.ts_start.month}/${training.ts_start.year}',
+                  style: TextStyle(
+                    color: baseColor,
+                    fontSize: 30,
+                  )),
+              Divider(
+                  height: 10.0
+              ),
+              Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10.0),
+                  child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                          charts.first.title,
+                          style: TextStyle(
+                            fontSize: 20.0,
+                          )
+                      )
+                  )
+              ),
+              Expanded(
+                  child: Image(
+                      PdfImage.file(
+                        document.document,
+                        bytes: charts.first.image.buffer.asUint8List(),
+                      )
+                  )
+              )
+            ]
+        );
+      },
+    ));
+
     for(var table in tables) {
       document.addPage(
         Page(
@@ -438,7 +661,7 @@ class Statistics {
       );
     }
 
-    for(var chart in charts) {
+    for(var chart in charts.sublist(1)) {
       document.addPage(Page(
         pageTheme: _myPageTheme(icon),
         build: (context) {
@@ -481,6 +704,10 @@ class Statistics {
     // Return the PDF file content
     return document.save();
     
+  }
+
+  PdfColor _convertColor(Material.Color color) {
+    return PdfColor(color.red.toDouble() / 255.0, color.green.toDouble() / 255.0, color.blue.toDouble() / 255.0);
   }
 
   PageTheme _myPageTheme(PdfImage icon) {
