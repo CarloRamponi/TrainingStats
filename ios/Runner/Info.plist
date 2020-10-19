@@ -27,7 +27,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>Camera is needed in order to be able to take picture of players.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Photo library is used to choose a player&apos;s photo from the phone memory.</string>
+	<string>Photo library is used to choose a player's photo from the phone memory.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
