@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:random_string/random_string.dart';
+import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/statistics.dart';
 import 'package:path/path.dart' as path;
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exportable_chart_state.dart';
@@ -122,6 +123,17 @@ class TouchesAverageState extends ExportableChartState<TouchesAverage> {
     return ExportedChart(
       title: "Actions every ${widget.statistics.touchesAverageIntervals[intervalIndex]} seconds",
       image: await (await boundary.toImage(pixelRatio: 8.0)).toByteData(format: ImageByteFormat.png)
+    );
+  }
+
+  @override
+  Future<ExportedData> getData() async {
+
+    Map<int, String> evalLabels = await EvaluationProvider.getAll();
+
+    return ExportedData(
+      "records",
+        [<dynamic>["Player", "Player name", "action", "evaluation value", "evaluation label", "timestamp"]] + widget.statistics.training.records.map<List<dynamic>>((record) => ["${record.player.shortName}", "${record.player.name}", "${record.action.name}", record.evaluation, evalLabels[record.evaluation], record.timestamp.toIso8601String()]).toList()
     );
   }
 

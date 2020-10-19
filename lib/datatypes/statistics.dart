@@ -21,9 +21,11 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart' as Material;
 import 'package:flutter/services.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart';
 import 'package:training_stats/datatypes/action.dart' as TSA;
+import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/training.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exportable_chart_state.dart';
@@ -383,19 +385,16 @@ class Statistics {
                 )
               ] + efficiencyChartData.entries.map((entry) => entry.value.keys.map((columnName) => SizedBox(
                   height: 30.0,
-                  child: Container(
-                    color: _convertColor(entry.key),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: EdgeInsets.all(5.0),
-                        child: Text(
-                          columnName,
-                          style: TextStyle(
-                              color: PdfColors.white,
-                              fontWeight: FontWeight.bold
-                          ),
-                        )
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: EdgeInsets.all(5.0),
+                      child: Text(
+                        columnName,
+                        style: TextStyle(
+                            color: PdfColors.white,
+                            fontWeight: FontWeight.bold,
+                        ),
                       )
                     )
                   )
@@ -437,38 +436,88 @@ class Statistics {
           )
         ]).expand((e) => e).toList())).toList();
 
-    const tableHeaders = ['', 'Player', 'Positivity', 'Efficiency', 'Perfection', 'Total actions'];
+    Map<int, String> evaluations = await EvaluationProvider.getAll();
 
-    final tables = chunk(training.players, 4).map((dataChunk) => Table(
+    final tables = chunk(players, 4).map((dataChunk) => Table(
       border: null,
       children: [
         TableRow(
           decoration: BoxDecoration(
             color: baseColor,
           ),
-          children: tableHeaders.map((header) => SizedBox(
+          children: [
+            SizedBox(
+                height: 30.0,
+                child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                        padding: EdgeInsets.all(5.0),
+                        child: Text(
+                          '',
+                          style: TextStyle(
+                              color: PdfColors.white,
+                              fontWeight: FontWeight.bold
+                          ),
+                        )
+                    )
+                )
+            ),
+            SizedBox(
+                height: 30.0,
+                child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                        padding: EdgeInsets.all(5.0),
+                        child: Text(
+                          'Player',
+                          style: TextStyle(
+                              color: PdfColors.white,
+                              fontWeight: FontWeight.bold
+                          ),
+                        )
+                    )
+                )
+            )
+          ] + evaluations.entries.map((entry) => SizedBox(
             height: 30.0,
             child: Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                  padding: EdgeInsets.all(5.0),
-                  child: Text(
-                    header,
-                    style: TextStyle(
-                        color: PdfColors.white,
-                        fontWeight: FontWeight.bold
-                    ),
-                  )
+              alignment: Alignment.center,
+              child: Container(
+                padding: EdgeInsets.all(5.0),
+                child: Text(
+                  entry.value ?? entry.key.toString(),
+                  style: TextStyle(
+                      color: PdfColors.white,
+                      fontWeight: FontWeight.bold
+                  ),
+                )
               )
             )
-          )).toList()
+          )).toList() + [
+            SizedBox(
+                height: 30.0,
+                child: Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                        padding: EdgeInsets.all(5.0),
+                        child: Text(
+                          'Total',
+                          style: TextStyle(
+                              color: PdfColors.white,
+                              fontWeight: FontWeight.bold
+                          ),
+                        )
+                    )
+                )
+            )
+          ]
         )
       ] + dataChunk.map((player) => [
         TableRow(
           decoration: BoxDecoration(
               border: BoxBorder(bottom: true, top: true, color: baseColor, width: 1.0)
           ),
-          children: [
+          children: <Widget>[
             Padding(
                 padding: EdgeInsets.all(5.0),
                 child: Text(
@@ -484,42 +533,28 @@ class Statistics {
                   )
                 )
             ),
+          ] + evaluations.entries.map((entry) => Container(
+            alignment: Alignment.center,
+            color: _convertColor(Evaluation.getColor(entry.key)),
+            child: Padding(
+              padding: EdgeInsets.all(5.0),
+              child: Text(
+                training.actionsSums[player].values.map((e) => e[entry.key]).reduce((e1, e2) => e1+e2).toString(),
+                style: TextStyle(
+                  color: useWhiteForeground(Evaluation.getColor(entry.key)) ? PdfColors.white : PdfColors.black,
+                )
+              )
+            ),
+          )).toList() + [
             Container(
-              alignment: Alignment.centerRight,
+              alignment: Alignment.center,
               child: Padding(
                   padding: EdgeInsets.all(5.0),
                   child: Text(
-                      positivity[player].toStringAsFixed(2) + " %",
+                      training.actionsSums[player].values.map((e) => e.values.reduce((e1, e2) => e1+e2)).reduce((e1, e2) => e1+e2).toString(),
                   )
               ),
-            ),
-            Container(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                  padding: EdgeInsets.all(5.0),
-                  child: Text(
-                      efficiency[player].toStringAsFixed(2) + " %",
-                  )
-              ),
-            ),
-            Container(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                  padding: EdgeInsets.all(5.0),
-                  child: Text(
-                      perfection[player].toStringAsFixed(2) + " %",
-                  )
-              ),
-            ),
-            Container(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                  padding: EdgeInsets.all(5.0),
-                  child: Text(
-                      touches[player].toString(),
-                  )
-              ),
-            ),
+            )
           ]
         )
     ] + training.actions.map((action) => TableRow(
@@ -537,42 +572,24 @@ class Statistics {
                   )
               ),
             ),
+          ] + evaluations.entries.map((entry) => Container(
+            alignment: Alignment.center,
+            color: _convertColor(Evaluation.getColor(entry.key)),
+            padding: EdgeInsets.all(5.0),
+            child: Text(
+                training.actionsSums[player][action][entry.key].toString(),
+                style: TextStyle(
+                  color: useWhiteForeground(Evaluation.getColor(entry.key)) ? PdfColors.white : PdfColors.black,
+                )
+            )
+          )).toList() + [
             Container(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                  padding: EdgeInsets.all(5.0),
-                  child: Text(
-                    positivityPerAction[player][action].toStringAsFixed(2) + " %",
-                  )
-              ),
-            ),
-            Container(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                  padding: EdgeInsets.all(5.0),
-                  child: Text(
-                    efficiencyPerAction[player][action].toStringAsFixed(2) + " %",
-                  )
-              ),
-            ),
-            Container(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                  padding: EdgeInsets.all(5.0),
-                  child: Text(
-                    perfectionPerAction[player][action].toStringAsFixed(2) + " %",
-                  )
-              ),
-            ),
-            Container(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                  padding: EdgeInsets.all(5.0),
-                  child: Text(
-                    touchesPerAction[player][action].toString(),
-                  )
-              ),
-            ),
+                alignment: Alignment.center,
+                padding: EdgeInsets.all(5.0),
+                child: Text(
+                    training.actionsSums[player][action].values.reduce((e1, e2) => e1+e2).toString(),
+                )
+            )
           ]
     )).toList()).expand((e) => e).toList())).toList();
     // Add page to the PDF

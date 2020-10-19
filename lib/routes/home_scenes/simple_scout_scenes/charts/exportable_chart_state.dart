@@ -31,7 +31,15 @@ class ExportedChart {
 
 }
 
+class ExportedData {
+  String title;
+  List<List<dynamic>> data;
+
+  ExportedData(this.title, this.data);
+}
+
 
 abstract class ExportableChartState<T extends StatefulWidget> extends State<T> {
   Future<ExportedChart> getImage();
+  Future<ExportedData> getData();
 }

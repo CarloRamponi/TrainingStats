@@ -49,6 +49,7 @@ dependencies:
   flutter_speed_dial: ^1.2.5
   image: 2.1.17
   tuple: 1.0.3
+  archive: ^2.0.13
 
 dev_dependencies:
   flutter_test:

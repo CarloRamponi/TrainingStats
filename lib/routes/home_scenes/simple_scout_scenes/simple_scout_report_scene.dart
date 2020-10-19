@@ -19,6 +19,8 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:archive/archive.dart';
+import 'package:archive/archive_io.dart';
 import 'package:csv/csv.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -176,13 +178,26 @@ class _SimpleScoutReportSceneState extends State<SimpleScoutReportScene> {
 
   void _exportCsv() async {
 
-    Map<int, String> evalLabels = await EvaluationProvider.getAll();
+    await loadingPopupWithProgress(context, (onProgress) async {
 
-    List<List<dynamic>> list = [<dynamic>["Player", "Player name", "action", "evaluation value", "evaluation label", "timestamp"]] + statistics.training.records.map<List<dynamic>>((record) => ["${record.player.shortName}", "${record.player.name}", "${record.action.name}", record.evaluation, evalLabels[record.evaluation], record.timestamp.toIso8601String()]).toList();
-    String csv = ListToCsvConverter().convert(list);
-    String filePath = path.join((await getTemporaryDirectory()).path, randomString(10, from: 62, to: 86) + ".csv");
-    File(filePath).writeAsStringSync(csv);
-    FlutterShare.shareFile(title: "training_${statistics.training.team.teamName}_${statistics.training.ts_start.toIso8601String()}.csv", filePath: filePath);
+      String filePath = path.join((await getTemporaryDirectory()).path, "csv_export.zip");
+      ZipFileEncoder encoder = ZipFileEncoder();
+      encoder.create(filePath);
+
+      List<GlobalKey<ExportableChartState>> charts = [_avgChart, _efficiencyChart, _classicChart];
+
+      double progress = 0.0;
+      for(GlobalKey<ExportableChartState> c in charts) {
+        ExportedData data = await c.currentState.getData();
+        String filename = await createCSV(data.data);
+        encoder.addFile(File(filename), data.title + ".csv");
+        progress += 1 / charts.length;
+      }
+
+      encoder.close();
+
+      FlutterShare.shareFile(title: "training_${statistics.training.team.teamName}_${statistics.training.ts_start.toIso8601String()}.zip", filePath: filePath);
+    }, "Generating CSV report...");
 
   }
 

@@ -22,6 +22,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
@@ -30,6 +31,7 @@ import 'package:flutter_ffmpeg/media_information.dart';
 import 'package:flutter_ffmpeg/statistics.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:random_string/random_string.dart';
 import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/record.dart';
 import 'package:training_stats/datatypes/training.dart';
@@ -213,6 +215,13 @@ Future<bool> createClips(String videoPath, DateTime startTimeStamp, DateTime end
 
   return true;
 
+}
+
+Future<String> createCSV(List<List<dynamic>> data) async {
+  String csv = ListToCsvConverter().convert(data);
+  String filePath = join((await getTemporaryDirectory()).path, randomString(10, from: 62, to: 86) + ".csv");
+  File(filePath)..createSync()..writeAsStringSync(csv);
+  return filePath;
 }
 
 Future<String> exportClips(int trainingId, List<Record> records, void Function(double) onProgress) async {

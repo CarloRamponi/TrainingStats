@@ -41,7 +41,7 @@ class EfficiencyChart extends StatefulWidget {
 
 }
 
-class _EfficiencyChartState extends ExportableChartState<EfficiencyChart> {
+class _EfficiencyChartState extends ExportableChartState<EfficiencyChart> with TickerProviderStateMixin {
 
   bool showLongNames = false;
 
@@ -111,68 +111,74 @@ class _EfficiencyChartState extends ExportableChartState<EfficiencyChart> {
             child: Padding(
               padding: EdgeInsets.all(10.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Table(
-                      defaultColumnWidth: IntrinsicColumnWidth(),
-                      border: TableBorder.all(
-                        color: Colors.grey.withOpacity(.2),
-                      ),
-                      children: [
-                        TableRow(
-                          children: [
-                            GestureDetector(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 8.0),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Expanded(
-                                      child: Text("Player", style: Theme.of(context).textTheme.button,),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.only(left: 5.0),
-                                      child: Icon(
-                                        showLongNames? Icons.arrow_back_ios : Icons.arrow_forward_ios,
-                                        size: 15.0,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  showLongNames = !showLongNames;
-                                });
-                              },
-                            ),
-                          ]
-                        )
-                      ] + players.map((player) => TableRow(
-                        children: <Widget>[
-                          Padding(
-                            padding: EdgeInsets.all(3.0),
-                            child: Row(
-                                children: [
-                                  Tooltip(
-                                    message: player.role.name,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(right: 10.0),
-                                      child: Container(
-                                        height: 20.0,
-                                        width: 20.0,
-                                        decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: player.role.color
+                  AnimatedSize(
+                    duration: Duration(milliseconds: 300),
+                    vsync: this,
+                    alignment: Alignment.centerLeft,
+                    child: Table(
+                        defaultColumnWidth: IntrinsicColumnWidth(),
+                        border: TableBorder.all(
+                          color: Colors.grey.withOpacity(.2),
+                        ),
+                        children: [
+                          TableRow(
+                              children: [
+                                GestureDetector(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 8.0),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Expanded(
+                                          child: Text("Player", style: Theme.of(context).textTheme.button,),
                                         ),
-                                      ),
+                                        Padding(
+                                          padding: EdgeInsets.only(left: 5.0),
+                                          child: Icon(
+                                            showLongNames? Icons.arrow_back_ios : Icons.arrow_forward_ios,
+                                            size: 15.0,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  Text(showLongNames ? player.name : player.shortName),
-                                ]
-                            ),
+                                  onTap: () {
+                                    setState(() {
+                                      showLongNames = !showLongNames;
+                                    });
+                                  },
+                                ),
+                              ]
                           )
-                        ]
-                      )).toList()
+                        ] + players.map((player) => TableRow(
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.all(3.0),
+                                child: Row(
+                                    children: [
+                                      Tooltip(
+                                        message: player.role.name,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(right: 10.0),
+                                          child: Container(
+                                            height: 20.0,
+                                            width: 20.0,
+                                            decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: player.role.color
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Text(showLongNames ? player.name : player.shortName),
+                                    ]
+                                ),
+                              )
+                            ]
+                        )).toList()
+                    ),
                   ),
                   Expanded(
                     child: SingleChildScrollView(
@@ -262,6 +268,15 @@ class _EfficiencyChartState extends ExportableChartState<EfficiencyChart> {
     return ExportedChart(
         title: "Points, errors and efficiency",
         image: await (await boundary.toImage(pixelRatio: 8.0)).toByteData(format: ImageByteFormat.png)
+    );
+  }
+
+  @override
+  Future<ExportedData> getData() async {
+    return ExportedData(
+      'efficiency',
+      [ <dynamic>['Player', 'Player name'] + values.values.map<dynamic>((e) => e.keys).expand((e) => e).toList() ] +
+          widget.statistics.players.map((player) => <dynamic>[player.shortName, player.name] + values.values.map<dynamic>((e) => e.values).expand((e) => e).map((m) => m[player]).toList()).toList()
     );
   }
 

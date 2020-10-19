@@ -22,6 +22,8 @@ import 'dart:ui';
 import 'package:charts_flutter/flutter.dart' as Charts;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:training_stats/datatypes/evaluation.dart';
 import 'package:training_stats/datatypes/player.dart';
 import 'package:training_stats/datatypes/statistics.dart';
 import 'package:training_stats/routes/home_scenes/simple_scout_scenes/charts/exportable_chart_state.dart';
@@ -42,11 +44,12 @@ class ClassicCharts extends StatefulWidget {
 
 }
 
-class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
+class _ClassicChartsState extends ExportableChartState<ClassicCharts> with TickerProviderStateMixin {
 
   Map<Player, bool> selected;
   List<Charts.Series<Player, String>> series;
   Future<bool> loading;
+  Map<int, String> evaluations;
 
   bool showLongNames = false;
 
@@ -66,32 +69,15 @@ class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
 
   Future<bool> _computeValues() async {
 
-    series = [
-      Charts.Series<Player, String>(
-        id: 'Positivity',
-        domainFn: (Player p, _) => p.shortName,
-        measureFn: (Player p, _) => widget.statistics.positivity[p],
-        data: widget.statistics.players
-      ),
-      Charts.Series<Player, String>(
-        id: 'Efficiency',
-        domainFn: (Player p, _) => p.shortName,
-        measureFn: (Player p, _) => widget.statistics.efficiency[p],
-          data: widget.statistics.players
-      ),
-      Charts.Series<Player, String>(
-        id: 'Perfection',
-        domainFn: (Player p, _) => p.shortName,
-        measureFn: (Player p, _) => widget.statistics.perfection[p],
-          data: widget.statistics.players
-      ),
-      Charts.Series<Player, String>(
-        id: 'Total actions',
-        domainFn: (Player p, _) => p.shortName,
-        measureFn: (Player p, _) => widget.statistics.touches[p],
-          data: widget.statistics.players
-      )
-    ];
+    evaluations = await EvaluationProvider.getAll();
+
+    series = evaluations.entries.map((entry) => Charts.Series<Player, String>(
+      id: entry.value ?? entry.key.toString(),
+      domainFn: (Player p, _) => p.shortName,
+      measureFn: (Player p, _) => widget.statistics.training.actionsSums[p].values.map((e) => e[entry.key]).reduce((e1, e2) => e1+e2),
+      data: widget.statistics.players,
+      colorFn: (__, _) => (( Color c ) => Charts.Color(r: c.red, g: c.green, b: c.blue))(Evaluation.getColor(entry.key)),
+    )).toList();
 
     return true;
 
@@ -108,52 +94,50 @@ class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
             padding: EdgeInsets.all(5.0),
             child: Row(
               children: [
-                Table(
-                  defaultColumnWidth: IntrinsicColumnWidth(),
-                  border: TableBorder.all(
-                    color: Colors.grey.withOpacity(.2),
-                  ),
-                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                  children: [
-                    TableRow(
-                        children: [
-                          GestureDetector(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 8.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Expanded(
-                                    child: Text("Player", style: Theme.of(context).textTheme.button,),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.only(left: 5.0),
-                                    child: Icon(
-                                      showLongNames? Icons.arrow_back_ios : Icons.arrow_forward_ios,
-                                      size: 15.0,
+                AnimatedSize(
+                  duration: Duration(milliseconds: 300),
+                  vsync: this,
+                  alignment: Alignment.centerLeft,
+                  child: Table(
+                    defaultColumnWidth: IntrinsicColumnWidth(),
+                    border: TableBorder.all(
+                      color: Colors.grey.withOpacity(.2),
+                    ),
+                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                    children: [
+                      TableRow(
+                          children: [
+                            GestureDetector(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 8.0),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Expanded(
+                                      child: Text("Player", style: Theme.of(context).textTheme.button,),
                                     ),
-                                  ),
-                                ],
+                                    Padding(
+                                      padding: EdgeInsets.only(left: 5.0),
+                                      child: Icon(
+                                        showLongNames? Icons.arrow_back_ios : Icons.arrow_forward_ios,
+                                        size: 15.0,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
+                              onTap: () {
+                                setState(() {
+                                  showLongNames = !showLongNames;
+                                });
+                              },
                             ),
-                            onTap: () {
-                              setState(() {
-                                showLongNames = !showLongNames;
-                              });
-                            },
-                          ),
-                        ]
-                    )
-                  ] + widget.statistics.training.players.map((player) => [
-                    TableRow(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selected[player] = !selected[player];
-                              });
-                            },
-                            child: Padding(
+                          ]
+                      )
+                    ] + widget.statistics.players.map((player) => [
+                      TableRow(
+                          children: [
+                            Padding(
                               padding: EdgeInsets.all(3.0),
                               child: Row(
                                 children: [
@@ -172,27 +156,46 @@ class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
                                     ),
                                   ),
                                   Text(showLongNames ? player.name : player.shortName),
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            selected[player] = !selected[player];
+                                          });
+                                        },
+                                        child: Padding(
+                                          padding: EdgeInsets.only(left: 5.0),
+                                          child: Icon(
+                                            selected[player]? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                            size: 15.0,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  )
                                 ],
                               ),
                             ),
+                          ]
+                      ), ] + widget.statistics.training.actions.map((action) => TableRow(
+                        children: [
+                          AnimatedContainer(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeIn,
+                            height: selected[player] ? 25.0 : 0.0,
+                            child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
+                                child: Text(
+                                  showLongNames ? action.name : action.shortName,
+                                  textAlign: TextAlign.right,
+                                )
+                            ),
                           ),
                         ]
-                    ), ] + widget.statistics.training.actions.map((action) => TableRow(
-                      children: [
-                        AnimatedContainer(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeIn,
-                          height: selected[player] ? 25.0 : 0.0,
-                          child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
-                              child: Text(
-                                showLongNames ? action.name : action.shortName,
-                                textAlign: TextAlign.right,
-                              )
-                          ),
-                        ),
-                      ]
-                  )).toList()).expand((e) => e).toList(),
+                    )).toList()).expand((e) => e).toList(),
+                  ),
                 ),
                 Expanded(
                   child: NotificationListener<OverscrollIndicatorNotification>(
@@ -210,211 +213,77 @@ class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
                         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
                         children: [
                           TableRow(
-                              children: [
-                                Tooltip(
-                                  message: "Positivity: (number of positive actions / total number of actions) * 100",
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 8.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: NotificationListener<OverscrollIndicatorNotification>(
-                                            onNotification: (overscroll) {
-                                              overscroll.disallowGlow();
-                                              return false;
-                                            },
-                                            child: SingleChildScrollView(
-                                              scrollDirection: Axis.horizontal,
-                                              child: Text(
-                                                "Positivity",
-                                                maxLines: 1,
-                                                style: Theme.of(context).textTheme.button,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(left: 2.0),
-                                          child: Text("%", style: Theme.of(context).textTheme.button,),
-                                        )
-                                      ],
-                                    ),
-                                  ),
+                              children: evaluations.entries.map((entry) => Container(
+                                padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                                color: Evaluation.getColor(entry.key),
+                                child: Text(
+                                  entry.value ?? entry.key.toString(),
+                                  maxLines: 1,
+                                  style: Theme.of(context).textTheme.button.copyWith(color: useWhiteForeground(Evaluation.getColor(entry.key)) ? Colors.white : Colors.black),
+                                  textAlign: TextAlign.center,
                                 ),
-                                Tooltip(
-                                  message: "Efficiency: ((number of perfect actions - number of terrible actions) / total number of actions) * 100",
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 8.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: NotificationListener<OverscrollIndicatorNotification>(
-                                            onNotification: (overscroll) {
-                                              overscroll.disallowGlow();
-                                              return false;
-                                            },
-                                            child: SingleChildScrollView(
-                                              scrollDirection: Axis.horizontal,
-                                              child: Text(
-                                                "Efficiency",
-                                                maxLines: 1,
-                                                style: Theme.of(context).textTheme.button,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(left: 2.0),
-                                          child: Text("%", style: Theme.of(context).textTheme.button,),
-                                        )
-                                      ],
-                                    ),
+                              )).toList() + [
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                                  child: Text(
+                                    'Total',
+                                    maxLines: 1,
+                                    style: Theme.of(context).textTheme.button,
+                                    textAlign: TextAlign.center,
                                   ),
-                                ),
-                                Tooltip(
-                                  message: "Perfection: (number of perfect actions / total number of actions) * 100",
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 8.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: NotificationListener<OverscrollIndicatorNotification>(
-                                            onNotification: (overscroll) {
-                                              overscroll.disallowGlow();
-                                              return false;
-                                            },
-                                            child: SingleChildScrollView(
-                                              scrollDirection: Axis.horizontal,
-                                              child: Text(
-                                                "Perfection",
-                                                maxLines: 1,
-                                                style: Theme.of(context).textTheme.button,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(left: 2.0),
-                                          child: Text("%", style: Theme.of(context).textTheme.button,),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Tooltip(
-                                  message: "Total number of actions",
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 8.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: NotificationListener<OverscrollIndicatorNotification>(
-                                            onNotification: (overscroll) {
-                                              overscroll.disallowGlow();
-                                              return false;
-                                            },
-                                            child: SingleChildScrollView(
-                                              scrollDirection: Axis.horizontal,
-                                              child: Text(
-                                                "Total actions",
-                                                maxLines: 1,
-                                                style: Theme.of(context).textTheme.button,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Padding(
-                                          padding: EdgeInsets.only(left: 2.0),
-                                          child: Text("#", style: Theme.of(context).textTheme.button,),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                                )
                               ]
                           )
-                        ] + widget.statistics.training.players.map((player) => [
+                        ] + widget.statistics.players.map((player) => [
                           TableRow(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-                                  child: Text(
-                                    widget.statistics.positivity[player].toStringAsFixed(2),
-                                    textAlign: TextAlign.right,
+                              children: evaluations.entries.map((entry) => Container(
+                                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
+                                color: Evaluation.getColor(entry.key),
+                                child: Text(
+                                  widget.statistics.training.actionsSums[player].values.map((e) => e[entry.key]).reduce((e1, e2) => e1+e2).toString(),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: useWhiteForeground(Evaluation.getColor(entry.key)) ? Colors.white : Colors.black
                                   ),
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
+                              )).toList() + [
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
                                   child: Text(
-                                    widget.statistics.efficiency[player].toStringAsFixed(2),
-                                    textAlign: TextAlign.right,
+                                    widget.statistics.training.actionsSums[player].values.map((e) => e.values.reduce((e1, e2) => e1+e2)).reduce((e1, e2) => e1+e2).toString(),
+                                    textAlign: TextAlign.center,
                                   ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-                                  child: Text(
-                                    widget.statistics.perfection[player].toStringAsFixed(2),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 5.0),
-                                  child: Text(
-                                    widget.statistics.touches[player].toString(),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
+                                )
                               ]
                           ), ] + widget.statistics.training.actions.map((action) => TableRow(
-                            children: [
+                            children: evaluations.keys.map((eval) => AnimatedContainer(
+                              duration: Duration(milliseconds: 300),
+                              curve: Curves.easeIn,
+                              height: selected[player] ? 25.0 : 0.0,
+                              child: Container(
+                                color: Evaluation.getColor(eval),
+                                padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                                child: Text(
+                                  widget.statistics.training.actionsSums[player][action][eval].toString(),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: useWhiteForeground(Evaluation.getColor(eval)) ? Colors.white : Colors.black
+                                  ),
+                                ),
+                              ),
+                            )).toList() + [
                               AnimatedContainer(
                                 duration: Duration(milliseconds: 300),
                                 curve: Curves.easeIn,
                                 height: selected[player] ? 25.0 : 0.0,
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
                                   child: Text(
-                                    widget.statistics.positivityPerAction[player][action].toStringAsFixed(2),
-                                    textAlign: TextAlign.right,
+                                    widget.statistics.training.actionsSums[player][action].values.reduce((e1, e2) => e1+e2).toString(),
+                                    textAlign: TextAlign.center,
                                   ),
                                 ),
-                              ),
-                              AnimatedContainer(
-                                duration: Duration(milliseconds: 300),
-                                curve: Curves.easeIn,
-                                height: selected[player] ? 25.0 : 0.0,
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
-                                  child: Text(
-                                    widget.statistics.efficiencyPerAction[player][action].toStringAsFixed(2),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                              ),
-                              AnimatedContainer(
-                                duration: Duration(milliseconds: 300),
-                                curve: Curves.easeIn,
-                                height: selected[player] ? 25.0 : 0.0,
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
-                                  child: Text(
-                                    widget.statistics.perfectionPerAction[player][action].toStringAsFixed(2),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                              ),
-                              AnimatedContainer(
-                                duration: Duration(milliseconds: 300),
-                                curve: Curves.easeIn,
-                                height: selected[player] ? 25.0 : 0.0,
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
-                                  child: Text(
-                                    widget.statistics.touchesPerAction[player][action].toString(),
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ),
-                              ),
+                              )
                             ]
                         )).toList()).expand((e) => e).toList(),
                       ),
@@ -438,7 +307,7 @@ class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
                       key: _chartKey,
                       child: Container(
                           padding: EdgeInsets.all(10.0),
-                          width: max(60.0 + 50.0 * widget.statistics.training.players.where((element) => widget.statistics.training.records.map<Player>((e) => e.player).contains(element)).length, box.maxWidth),
+                          width: max(60.0 + 50.0 * widget.statistics.players.length, box.maxWidth),
                           height: 370.0,
                           child: Charts.BarChart(
                             series,
@@ -446,7 +315,7 @@ class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
                             animate: true,
                             behaviors: [
                               Charts.SeriesLegend(
-                                desiredMaxColumns: 3
+                                desiredMaxColumns: 6
                               )
                             ],
                           ),
@@ -470,8 +339,21 @@ class _ClassicChartsState extends ExportableChartState<ClassicCharts> {
   Future<ExportedChart> getImage() async {
     RenderRepaintBoundary boundary = _chartKey.currentContext.findRenderObject();
     return ExportedChart(
-        title: "Common indicators for each player (all actions)",
+        title: "Actions number for each evaluation and action",
         image: await (await boundary.toImage(pixelRatio: 8.0)).toByteData(format: ImageByteFormat.png)
+    );
+  }
+
+  @override
+  Future<ExportedData> getData() async {
+    return ExportedData(
+      'actions',
+      [ <dynamic>['Player', 'Player name', 'Action'] + evaluations.entries.map<dynamic>((eval) => eval.value ?? eval.key.toString()).toList() + <dynamic>['Total'] ] +
+        widget.statistics.players.map<List<List<dynamic>>>((player) =>
+          [ <dynamic>[player.shortName, player.name, 'All'] + evaluations.keys.map((eval) => widget.statistics.training.actionsSums[player].values.map((e) => e[eval]).reduce((e1, e2) => e1+e2).toString()).toList() ] +
+          widget.statistics.training.actions.map<List<dynamic>>((action) =>
+            <dynamic>[player.shortName, player.name, action.name] + evaluations.keys.map<dynamic>((eval) => widget.statistics.training.actionsSums[player][action][eval].toString()).toList()
+          ).toList()).expand((e) => e).toList()
     );
   }
 
